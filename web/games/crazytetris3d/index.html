@@ -399,6 +399,27 @@
 
     function createBlockMesh(colorHex, isGhost=false, isBomb=false){ const geo = new THREE.BoxGeometry(0.96,0.96,0.96); let mat; if (isGhost) mat = new THREE.MeshBasicMaterial({ color: colorHex, wireframe:true, transparent:true, opacity:0.25}); else mat = new THREE.MeshStandardMaterial({ color: colorHex, metalness:0.2, roughness:0.45 }); const mesh = new THREE.Mesh(geo, mat); if (!isGhost) { mesh.castShadow=true; mesh.receiveShadow=true; } const edgesGeo = new THREE.EdgesGeometry(geo); const edgesMat = new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:isGhost?0.15:0.35 }); mesh.add(new THREE.LineSegments(edgesGeo, edgesMat)); return mesh; }
 
+    // Camera helpers
+    function updateCameraPosition(){
+      if(!camera) return;
+      const phi = cameraAngleY; // elevation
+      const theta = cameraAngleX; // azimuth
+      const r = cameraDistance;
+      const y = Math.sin(phi) * r;
+      const x = Math.cos(phi) * Math.cos(theta) * r;
+      const z = Math.cos(phi) * Math.sin(theta) * r;
+      camera.position.set(x, y, z);
+      camera.lookAt(new THREE.Vector3(0, 0, 0));
+    }
+
+    function onWindowResize(){
+      if(!camera || !renderer) return;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    }
+
     function checkCollision(piece, grid, offsetX=0, offsetY=0, offsetZ=0){
       for (let coord of piece.coords){ const x = piece.x + coord[0] + offsetX; const y = piece.y + coord[1] + offsetY; const z = piece.z + coord[2] + offsetZ; if (x < 0 || x >= gridX || z < 0 || z >= gridZ || y < 0) return true; if (y >= gridY) continue; if (grid[x] && grid[x][y] && grid[x][y][z]) return true; } return false; }
 
