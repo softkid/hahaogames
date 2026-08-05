@@ -471,18 +471,43 @@
 
     function clearAllSceneBlocks(){ for(let x=0;x<gridX;x++) for(let y=0;y<gridY;y++) for(let z=0;z<gridZ;z++){ if(gridState[x] && gridState[x][y] && gridState[x][y][z]){ scene.remove(gridState[x][y][z]); gridState[x][y][z]=null; } } }
 
-    function loadStage(stageIdx){ currentStageIdx = stageIdx; const s = STAGES[stageIdx]; gridX = s.grid.x; gridY = s.grid.y; gridZ = s.grid.z; gridState = create3DGridArray(gridX,gridY,gridZ); if (containerMesh) scene.remove(containerMesh); buildGridContainer(gridX,gridY,gridZ, s.theme.accentColor); clearAllSceneBlocks(); score=0; linesCleared=0; updateHUD(); }
+    function loadStage(stageIdx){
+      currentStageIdx = stageIdx;
+      const s = STAGES[stageIdx];
+      gridX = s.grid.x; gridY = s.grid.y; gridZ = s.grid.z;
+      gridState = create3DGridArray(gridX,gridY,gridZ);
+      if (containerMesh) scene.remove(containerMesh);
+      buildGridContainer(gridX,gridY,gridZ, s.theme.accentColor);
+      clearAllSceneBlocks();
+      if(activePiece && activePiece.meshGroup){
+        scene.remove(activePiece.meshGroup);
+        activePiece = null;
+      }
+      if(ghostMeshGroup){
+        while(ghostMeshGroup.children.length) ghostMeshGroup.remove(ghostMeshGroup.children[0]);
+      }
+      const stageNumEl = document.getElementById('hud-stage');
+      if(stageNumEl) stageNumEl.innerText = `${s.id} / ${STAGES.length}`;
+      score=0; linesCleared=0; updateHUD();
+    }
 
     function startCurrentStage(){
-      console.log('startCurrentStage called, gameRunning=', gameRunning);
-      if(gameRunning) return; 
+      console.log('startCurrentStage called, currentStageIdx=', currentStageIdx);
+      const modalBriefing = document.getElementById('modal-briefing');
+      if(modalBriefing) modalBriefing.classList.add('hidden');
+      const modalResult = document.getElementById('modal-result');
+      if(modalResult) modalResult.classList.add('hidden');
+
+      gameRunning = false;
       loadStage(currentStageIdx);
-      gameRunning=true; 
+      gameRunning = true; 
       activePiece = spawnPiece(null);
       nextPieceData = (currentStageIdx<3?PIECES_BASIC:PIECES_3D)[Math.floor(Math.random()* (currentStageIdx<3?PIECES_BASIC.length:PIECES_3D.length))];
       renderNextPiecePreview(nextPieceData);
+      updateGhostPiece();
       lastTime = performance.now();
-      animate();
+      dropCounter = 0;
+      requestAnimationFrame(animate);
     }
 
     function onStageCleared(){ const modal = document.getElementById('modal-result'); if(modal){ modal.classList.remove('hidden'); document.getElementById('result-title').innerText='STAGE CLEAR! 🎉'; document.getElementById('result-desc').innerText='스테이지를 클리어했습니다.'; } gameRunning=false; }
@@ -493,12 +518,27 @@
 
     function renderStageMapGrid(){}
 
-    function animate(time=0){ if(!renderer) return; const dt = time - lastTime; lastTime = time; if(gameRunning && !isPaused){ dropCounter += dt; if(dropCounter > dropInterval){ dropCounter = 0; stepActivePiece(); } }
+    function animate(time){
+      if(!renderer) return;
+      if(!time) time = performance.now();
+      if(!lastTime) lastTime = time;
+      const dt = Math.min(Math.max(0, time - lastTime), 100);
+      lastTime = time;
+
+      if(gameRunning && !isPaused){
+        dropCounter += dt;
+        if(dropCounter > dropInterval){
+          dropCounter = 0;
+          stepActivePiece();
+        }
+      }
       // simple particle movement
       if(backgroundParticles){ const pos = backgroundParticles.geometry.attributes.position.array; for(let i=1;i<pos.length;i+=3){ pos[i] -= 0.02; if(pos[i] < -40) pos[i] = 40; } backgroundParticles.geometry.attributes.position.needsUpdate = true; }
       // animate whale
       if(whaleMeshGroup){ whaleMeshGroup.rotation.y += 0.002; whaleMeshGroup.position.x += Math.sin(time*0.0005)*0.02; }
-      renderer.render(scene, camera); if(gameRunning) requestAnimationFrame(animate); }
+      renderer.render(scene, camera);
+      if(gameRunning) requestAnimationFrame(animate);
+    }
 
     // Keyboard binds
     window.addEventListener('keydown', e=>{
@@ -568,8 +608,8 @@
 
     // UI controls
     const startBtn = document.getElementById('btn-start-stage'); if(startBtn) startBtn.onclick = startCurrentStage;
-    const nextBtn = document.getElementById('btn-next-stage'); if(nextBtn) nextBtn.onclick = ()=>{ document.getElementById('modal-result').classList.add('hidden'); currentStageIdx = Math.min(STAGES.length-1, currentStageIdx+1); startCurrentStage(); };
-    const retryBtn = document.getElementById('btn-retry-stage'); if(retryBtn) retryBtn.onclick = ()=>{ document.getElementById('modal-result').classList.add('hidden'); startCurrentStage(); };
+    const nextBtn = document.getElementById('btn-next-stage'); if(nextBtn) nextBtn.onclick = ()=>{ const mr = document.getElementById('modal-result'); if(mr) mr.classList.add('hidden'); gameRunning=false; currentStageIdx = Math.min(STAGES.length-1, currentStageIdx+1); startCurrentStage(); };
+    const retryBtn = document.getElementById('btn-retry-stage'); if(retryBtn) retryBtn.onclick = ()=>{ const mr = document.getElementById('modal-result'); if(mr) mr.classList.add('hidden'); gameRunning=false; startCurrentStage(); };
     const btnStages = document.getElementById('btn-stages'); if(btnStages) btnStages.onclick = ()=>{ document.getElementById('modal-stages').classList.remove('hidden'); };
     const btnCloseStages = document.getElementById('btn-close-stages'); if(btnCloseStages) btnCloseStages.onclick = ()=>{ document.getElementById('modal-stages').classList.add('hidden'); };
     const btnResetCam = document.getElementById('btn-reset-cam'); if(btnResetCam) btnResetCam.onclick = ()=>{ cameraAngleX=0; cameraAngleY=Math.PI/6; cameraDistance=20; updateCameraPosition(); };
