@@ -1,5 +1,6 @@
 [
-  {"id":"snake","title":"Snake","genre":"Arcade","thumbnail":"assets/games/snake-thumb.svg","path":"/games/snake/"},
-  {"id":"blackjack","title":"Blackjack","genre":"Card","thumbnail":"assets/games/blackjack-thumb.svg","path":"/games/blackjack/"},
-  {"id":"pixel-adventure","title":"Pixel Adventure","genre":"RPG","thumbnail":"assets/games/pixel-thumb.svg","path":"/games/pixel/"}
+  {"id":"snake","title":"Snake","genre":"Arcade","thumbnail":"assets/games/snake-thumb.svg","path":"games/snake/index.html"},
+  {"id":"blackjack","title":"Blackjack","genre":"Card","thumbnail":"assets/games/blackjack-thumb.svg","path":"games/blackjack/index.html"},
+  {"id":"pixel-adventure","title":"Pixel Adventure","genre":"RPG","thumbnail":"assets/games/pixel-thumb.svg","path":"games/pixel/index.html"},
+  {"id":"crazytetris3d","title":"CrazyTetris3D","genre":"Puzzle","thumbnail":"assets/games/crazytetris3d-thumb.svg","path":"games/crazytetris3d/index.html"}
 ]
