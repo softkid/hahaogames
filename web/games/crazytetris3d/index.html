@@ -224,7 +224,7 @@
         Tip: 벽 쪽에 빈 공간을 남기지 않으면 더 많은 레이어를 제거할 수 있습니다.
       </div>
 
-      <button id="btn-start-stage" class="w-full py-3.5 bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold rounded-xl text-sm uppercase tracking-wider shadow-lg">
+      <button id="btn-start-stage" onclick="startCurrentStage()" class="w-full py-3.5 bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold rounded-xl text-sm uppercase tracking-wider shadow-lg">
         Start Stage
       </button>
     </div>
@@ -452,7 +452,17 @@
 
     function loadStage(stageIdx){ currentStageIdx = stageIdx; const s = STAGES[stageIdx]; gridX = s.grid.x; gridY = s.grid.y; gridZ = s.grid.z; gridState = create3DGridArray(gridX,gridY,gridZ); if (containerMesh) scene.remove(containerMesh); buildGridContainer(gridX,gridY,gridZ, s.theme.accentColor); clearAllSceneBlocks(); score=0; linesCleared=0; updateHUD(); }
 
-    function startCurrentStage(){ if(gameRunning) return; loadStage(currentStageIdx); gameRunning=true; activePiece = spawnPiece(null); nextPieceData = (currentStageIdx<3?PIECES_BASIC:PIECES_3D)[Math.floor(Math.random()* (currentStageIdx<3?PIECES_BASIC.length:PIECES_3D.length))]; renderNextPiecePreview(nextPieceData); lastTime = performance.now(); animate(); }
+    function startCurrentStage(){
+      console.log('startCurrentStage called, gameRunning=', gameRunning);
+      if(gameRunning) return; 
+      loadStage(currentStageIdx);
+      gameRunning=true; 
+      activePiece = spawnPiece(null);
+      nextPieceData = (currentStageIdx<3?PIECES_BASIC:PIECES_3D)[Math.floor(Math.random()* (currentStageIdx<3?PIECES_BASIC.length:PIECES_3D.length))];
+      renderNextPiecePreview(nextPieceData);
+      lastTime = performance.now();
+      animate();
+    }
 
     function onStageCleared(){ const modal = document.getElementById('modal-result'); if(modal){ modal.classList.remove('hidden'); document.getElementById('result-title').innerText='STAGE CLEAR! 🎉'; document.getElementById('result-desc').innerText='스테이지를 클리어했습니다.'; } gameRunning=false; }
 
