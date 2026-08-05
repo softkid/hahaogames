@@ -7,11 +7,28 @@ async function loadGames(){
     games.forEach(g=>{
       const card = document.createElement('div');
       card.className = 'game-card';
-      card.innerHTML = `
-        <div class="game-thumb" style="background:linear-gradient(90deg, rgba(124,77,255,0.12), rgba(55,162,255,0.08));display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.9);">${g.title}</div>
-        <div class="game-title">${g.title}</div>
-        <div class="game-genre">${g.genre}</div>
-      `;
+
+      const thumbWrap = document.createElement('div');
+      thumbWrap.className = 'game-thumb-wrap';
+      const thumb = document.createElement('img');
+      thumb.className = 'game-thumb';
+      thumb.src = g.thumbnail;
+      thumb.alt = g.title + ' thumbnail';
+      thumb.loading = 'lazy';
+      thumbWrap.appendChild(thumb);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'play-overlay';
+      const icon = document.createElement('div'); icon.className = 'play-icon';
+      overlay.appendChild(icon);
+      thumbWrap.appendChild(overlay);
+
+      card.appendChild(thumbWrap);
+      const title = document.createElement('div'); title.className = 'game-title'; title.textContent = g.title;
+      const genre = document.createElement('div'); genre.className = 'game-genre'; genre.textContent = g.genre;
+      card.appendChild(title); card.appendChild(genre);
+
+      card.addEventListener('click',()=>openGame(g.path));
       grid.appendChild(card);
     });
   }catch(e){console.error(e)}
@@ -50,3 +67,41 @@ function startParticles(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{loadGames();startParticles();});
+
+// Game modal controls
+function openGame(path){
+  const modal = document.getElementById('gameModal');
+  const frame = document.getElementById('gameFrame');
+  frame.src = path;
+  modal.setAttribute('aria-hidden','false');
+}
+function closeGame(){
+  const modal = document.getElementById('gameModal');
+  const frame = document.getElementById('gameFrame');
+  frame.src = '';
+  modal.setAttribute('aria-hidden','true');
+}
+
+document.addEventListener('click', (e)=>{
+  const modal = document.getElementById('gameModal');
+  if(!modal) return;
+  const closeBtn = document.getElementById('modalClose');
+  if(e.target === closeBtn) closeGame();
+  if(e.target === modal) closeGame();
+});
+
+// Community feed
+async function loadCommunity(){
+  try{
+    const res = await fetch('community.json');
+    const posts = await res.json();
+    const feed = document.getElementById('communityFeed');
+    posts.forEach(p=>{
+      const card = document.createElement('div'); card.className='post-card';
+      card.innerHTML = `<h3 class="post-title">${p.title}</h3><div class="post-meta">${p.author} · ${p.date}</div><div class="post-excerpt">${p.excerpt}</div>`;
+      feed.appendChild(card);
+    });
+  }catch(e){console.error('community load',e)}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{loadCommunity()});

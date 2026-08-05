@@ -38,16 +38,7 @@
 
     <section id="community" class="section muted">
       <h2 class="section-title">Ludara — Community Preview</h2>
-      <div class="community-preview glass">
-        <article>
-          <h3>Welcome to Ludara</h3>
-          <p>커뮤니티에서 트렌딩 토픽과 튜토리얼을 확인하세요.</p>
-        </article>
-        <article>
-          <h3>Showcase</h3>
-          <p>인디 개발자들의 작품을 만나보세요.</p>
-        </article>
-      </div>
+      <div id="communityFeed" class="community-preview"></div>
     </section>
 
     <section id="team" class="section">
@@ -78,6 +69,14 @@
       <p>Connect • Create • Play • Future</p>
     </div>
   </footer>
+
+  <!-- Game modal -->
+  <div id="gameModal" class="game-modal" aria-hidden="true">
+    <div class="game-modal-inner">
+      <button id="modalClose" class="modal-close" aria-label="Close">×</button>
+      <iframe id="gameFrame" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </div>
 
   <script src="main.js"></script>
 </body>
