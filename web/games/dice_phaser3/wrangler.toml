@@ -1,0 +1,5 @@
+name = "dice-noir-city"
+pages_build_output_dir = "dist"
+
+[vars]
+ENVIRONMENT = "production"
