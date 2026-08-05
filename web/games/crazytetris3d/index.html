@@ -91,17 +91,25 @@
             
       <!-- Left Info Panel -->
       <div class="card-panel p-3 rounded-xl pointer-events-auto space-y-1.5 w-36 sm:w-44">
-        /* Lines 94-106 omitted */
+        <div class="text-xs text-zinc-400">Score</div>
+        <div id="hud-score" class="text-xl font-extrabold text-white">0</div>
+        <div class="text-xs text-zinc-400">Lines</div>
+        <div id="hud-lines" class="text-lg font-semibold text-amber-400">0</div>
+        <div class="text-xs text-zinc-400">Stage</div>
+        <div id="hud-stage" class="text-sm text-cyan-300">1</div>
       </div>
 
       <!-- Center Gravity / Teaser HUD Indicator -->
       <div id="hud-gravity-box" class="card-panel py-2 px-4 rounded-xl pointer-events-auto text-center border-cyan-500/30">
-        /* Lines 110-115 omitted */
+        <div class="text-sm font-bold text-cyan-200">Gravity: <span id="hud-gravity">Normal</span></div>
+        <div id="hud-teaser-msg" class="hidden text-xs text-amber-300 mt-1">🐋 고래의 노래가 울립니다...</div>
       </div>
 
       <!-- Right Systems Button Panel -->
       <div class="card-panel p-3 rounded-xl pointer-events-auto text-center w-36 sm:w-44 space-y-2">
-        /* Lines 119-135 omitted */
+        <button id="btn-stages" class="w-full py-2 bg-zinc-900 hover:bg-zinc-800 rounded-md text-sm font-bold">Stages</button>
+        <button id="btn-pause" class="w-full py-2 bg-zinc-900 hover:bg-zinc-800 rounded-md text-sm font-bold">Pause</button>
+        <button id="btn-settings" class="w-full py-2 bg-zinc-900 hover:bg-zinc-800 rounded-md text-sm font-bold">Settings</button>
       </div>
     </div>
 
@@ -129,17 +137,20 @@
     </div>
 
     <!-- Skills Panel -->
-    <div id="skill-panel" class="card-panel p-2.5 rounded-xl pointer-events-auto w-full sm:w-72 space-y-1.5">
+      <div id="skill-panel" class="card-panel p-2.5 rounded-xl pointer-events-auto w-full sm:w-72 space-y-1.5">
       <div class="text-[10px] font-bold text-rose-400 uppercase tracking-wider flex justify-between">
-        /* Lines 164-166 omitted */
+        <span>Skills</span>
+        <span id="chaos-energy" class="text-amber-300">Chaos: 0</span>
       </div>
 
       <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden border border-zinc-800">
-        /* Lines 169-170 omitted */
+        <div id="chaos-bar" class="h-2 bg-rose-500" style="width:0%"></div>
       </div>
 
       <div class="grid grid-cols-2 gap-1.5 pt-0.5">
-        /* Lines 173-179 omitted */
+        <button id="skill-bomb" class="px-3 py-2 bg-zinc-900 rounded-lg text-xs font-bold">Bomb</button>
+        <button id="skill-vortex" class="px-3 py-2 bg-zinc-900 rounded-lg text-xs font-bold">Vortex</button>
+        <div class="col-span-2 text-[10px] text-zinc-400">Skills give tactical advantages when charged.</div>
       </div>
     </div>
   </div>
@@ -166,7 +177,7 @@
   <div id="modal-stages" class="absolute inset-0 bg-zinc-950/95 backdrop-blur-lg z-40 hidden flex flex-col items-center justify-between p-4 sm:p-6">
     <div class="text-center mt-2">
       <h2 class="text-2xl sm:text-4xl font-black font-orbitron text-rose-500 tracking-wider">
-        /* Lines 205-206 omitted */
+        Select Stage
       </h2>
       <p class="text-xs text-zinc-400 mt-1">단계별로 격자 크기와 깊이가 확장되는 긍정의 성장 여행</p>
     </div>
@@ -177,15 +188,9 @@
     </div>
 
     <div class="flex gap-3 mb-2">
-      <button id="btn-mode-campaign" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-full font-bold text-xs">
-        /* Lines 217-218 omitted */
-      </button>
-      <button id="btn-mode-infinite" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-full font-bold text-xs">
-        /* Lines 220-221 omitted */
-      </button>
-      <button id="btn-close-stages" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-full font-bold text-xs text-zinc-300">
-        /* Lines 223-224 omitted */
-      </button>
+      <button id="btn-mode-campaign" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-full font-bold text-xs">Campaign</button>
+      <button id="btn-mode-infinite" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-full font-bold text-xs">Infinite</button>
+      <button id="btn-close-stages" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-full font-bold text-xs text-zinc-300">Close</button>
     </div>
   </div>
 
@@ -193,19 +198,24 @@
   <div id="modal-briefing" class="absolute inset-0 bg-zinc-950/90 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center">
     <div class="card-panel p-6 sm:p-8 rounded-2xl max-w-md w-full space-y-4 text-left border-rose-500/40">
       <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
-        /* Lines 232-234 omitted */
+        <div>
+          <h3 id="briefing-title" class="font-black text-lg">Stage Briefing</h3>
+          <div id="briefing-sub" class="text-xs text-zinc-400">격자 크기와 난이도를 확인하세요.</div>
+        </div>
+        <div id="briefing-meta" class="text-xs text-zinc-400">Depth • Difficulty</div>
       </div>
 
       <div class="space-y-2 text-xs text-zinc-300">
-        /* Lines 237-240 omitted */
+        <p id="briefing-desc">이 스테이지는 초보자를 위한 소개 스테이지입니다. 블록을 쌓아 레이어를 완성하면 클리어됩니다.</p>
+        <p class="text-zinc-500">컨트롤: 화살표(이동), Space(하드드롭), R/F/E(회전)</p>
       </div>
 
       <div class="bg-zinc-900/90 p-3.5 rounded-xl border border-amber-500/30 text-xs text-amber-200 leading-relaxed">
-        /* Lines 243-245 omitted */
+        Tip: 벽 쪽에 빈 공간을 남기지 않으면 더 많은 레이어를 제거할 수 있습니다.
       </div>
 
       <button id="btn-start-stage" class="w-full py-3.5 bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold rounded-xl text-sm uppercase tracking-wider shadow-lg">
-        /* Lines 248-249 omitted */
+        Start Stage
       </button>
     </div>
   </div>
@@ -221,10 +231,10 @@
 
     <div class="flex gap-3">
       <button id="btn-next-stage" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-full text-sm tracking-wider uppercase shadow-lg">
-        /* Lines 264-265 omitted */
+        Next Stage
       </button>
       <button id="btn-retry-stage" class="px-6 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold rounded-full text-sm uppercase">
-        /* Lines 267-268 omitted */
+        Retry Stage
       </button>
     </div>
   </div>
@@ -483,342 +493,6 @@
     const btnPause = document.getElementById('btn-pause'); if(btnPause) btnPause.onclick = ()=>{ isPaused = !isPaused; btnPause.innerText = isPaused ? 'RESUME' : 'PAUSE'; if(!isPaused) animate(); };
 
     window.onload = function(){ init3DScene(); loadStage(0); renderNextPiecePreview(null); };
-  </script>
-
-      // Create Majestic 3D Whale Mesh
-      create3DWhaleMesh();
-
-      // Mouse Camera Orbit Handling
-      canvasEl.addEventListener('mousedown', e => {
-        /* Lines 559-560 omitted */
-        previousMousePosition = { x: e.clientX, y: e.clientY };
-      });
-
-      window.addEventListener('mousemove', e => {
-        /* Lines 564-572 omitted */
-        updateCameraPosition();
-      });
-
-      window.addEventListener('mouseup', () => isDragging = false);
-
-      canvasEl.addEventListener('wheel', e => {
-        /* Lines 578-579 omitted */
-        updateCameraPosition();
-      });
-
-      window.addEventListener('resize', onWindowResize);
-    }
-
-    function createBackgroundParticleSystem() {
-      if (backgroundParticles) scene.remove(backgroundParticles);
-
-      const particleCount = 200;
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(particleCount * 3);
-
-      for (let i = 0; i < particleCount * 3; i += 3) {/* Lines 593-596 omitted */}
-
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const material = new THREE.PointsMaterial({
-        /* Lines 600-603 omitted */
-        opacity: 0.6
-      });
-
-      backgroundParticles = new THREE.Points(geometry, material);
-      scene.add(backgroundParticles);
-    }
-
-    // Creates a Majestic Low-Poly Glowing Whale that swims gracefully in the background
-    function create3DWhaleMesh() {
-      whaleMeshGroup = new THREE.Group();
-
-      // Whale Body
-      const bodyGeo = new THREE.ConeGeometry(1.5, 6, 8);
-      bodyGeo.rotateX(Math.PI / 2);
-      const bodyMat = new THREE.MeshStandardMaterial({
-        /* Lines 618-622 omitted */
-        emissiveIntensity: 0.8
-      });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
-      body.castShadow = true;
-      whaleMeshGroup.add(body);
-
-      // Tail
-      const tailGeo = new THREE.BoxGeometry(2.5, 0.2, 1.2);
-      const tail = new THREE.Mesh(tailGeo, bodyMat);
-      tail.position.set(0, 0, -3.2);
-      tail.castShadow = true;
-      whaleMeshGroup.add(tail);
-
-      // Flippers
-      const flipperGeo = new THREE.BoxGeometry(3.5, 0.15, 1.0);
-      const flippers = new THREE.Mesh(flipperGeo, bodyMat);
-      flippers.position.set(0, 0, 0.8);
-      flippers.castShadow = true;
-      whaleMeshGroup.add(flippers);
-
-      whaleMeshGroup.position.set(-35, 12, -20);
-      scene.add(whaleMeshGroup);
-    }
-
-    function buildGridContainer(gx, gy, gz, accentColor = 0x38bdf8) {
-      if (containerMesh) scene.remove(containerMesh);
-
-      containerMesh = new THREE.Group();
-
-      // Cage Wireframe
-      const boxGeo = new THREE.BoxGeometry(gx, gy, gz);
-      const edgeGeo = new THREE.EdgesGeometry(boxGeo);
-      const edgeMat = new THREE.LineBasicMaterial({ color: accentColor, linewidth: 2, transparent: true, opacity: 0.5 });
-      const wireframe = new THREE.LineSegments(edgeGeo, edgeMat);
-      containerMesh.add(wireframe);
-
-      // Floor Grid Subdivision
-      floorGridMesh = new THREE.GridHelper(Math.max(gx, gz), Math.max(gx, gz), accentColor, 0x334155);
-      floorGridMesh.position.y = -gy / 2;
-      containerMesh.add(floorGridMesh);
-
-      // Translucent Glass Floor that receives realistic shadows
-      const floorGeo = new THREE.PlaneGeometry(gx, gz);
-      const floorMat = new THREE.MeshStandardMaterial({
-        /* Lines 666-671 omitted */
-        side: THREE.DoubleSide
-      });
-      const floor = new THREE.Mesh(floorGeo, floorMat);
-      floor.rotation.x = Math.PI / 2;
-      floor.position.y = -gy / 2 - 0.01;
-      floor.receiveShadow = true;
-      containerMesh.add(floor);
-
-      scene.add(containerMesh);
-    }
-
-    function create3DGridArray(gx, gy, gz) {
-      const arr = new Array(gx);
-      for (let x = 0; x < gx; x++) {/* Lines 685-689 omitted */}
-      return arr;
-    }
-
-    function gridToWorld(x, y, z) {
-      return {/* Lines 695-698 omitted */};
-    }
-
-    function updateCameraPosition() {
-      camera.position.x = cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
-      camera.position.y = cameraDistance * Math.sin(cameraAngleY);
-      camera.position.z = cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
-      camera.lookAt(0, 0, 0);
-    }
-
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    function createBlockMesh(colorHex, isGhost = false, isBomb = false) {
-      const geo = new THREE.BoxGeometry(0.96, 0.96, 0.96);
-      let mat;
-
-      if (isGhost) {
-        mat = new THREE.MeshBasicMaterial({ color: colorHex, wireframe: true, transparent: true, opacity: 0.35 });
-      } else {/* Lines 721-728 omitted */}
-
-      const mesh = new THREE.Mesh(geo, mat);
-      if (!isGhost) {/* Lines 732-734 omitted */}
-
-      const edgesGeo = new THREE.EdgesGeometry(geo);
-      const edgesMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: isGhost ? 0.2 : 0.45 });
-      mesh.add(new THREE.LineSegments(edgesGeo, edgesMat));
-
-      return mesh;
-    }
-
-    function checkCollision(piece, grid, offsetX = 0, offsetY = 0, offsetZ = 0) {
-      for (let coord of piece.coords) {/* Lines 745-751 omitted */}
-      return false;
-    }
-
-    function spawnPiece(pieceData) {
-      const stage = STAGES[currentStageIdx];
-      let pData = pieceData;
-            
-      if (!pData) {/* Lines 760-766 omitted */}
-
-      // Calculate bounding box of coordinates to center piece safely within grid bounds
-      let minX = Infinity, maxX = -Infinity;
-      let minZ = Infinity, maxZ = -Infinity;
-      let minY = Infinity, maxY = -Infinity;
-
-      for (let c of pData.coords) {/* Lines 774-780 omitted */}
-
-      let sx = Math.floor((gridX - (maxX - minX + 1)) / 2) - minX;
-      let sz = Math.floor((gridZ - (maxZ - minZ + 1)) / 2) - minZ;
-      let sy = gridY - 1 - maxY;
-
-      const group = new THREE.Group();
-      for (let coord of pData.coords) {/* Lines 788-791 omitted */}
-      scene.add(group);
-
-      return {/* Lines 795-801 omitted */};
-    }
-
-    function updatePieceMeshPosition(piece) {
-      if (!piece || !piece.meshGroup) return;
-      const pos = gridToWorld(piece.x, piece.y, piece.z);
-      piece.meshGroup.position.set(pos.x, pos.y, pos.z);
-    }
-
-    function rotatePiece3D(piece, axis) {
-      if (!piece) return;
-
-      const newCoords = piece.coords.map(c => {
-        /* Lines 814-818 omitted */
-        return [x, y, z];
-      });
-
-      const oldCoords = piece.coords;
-      piece.coords = newCoords;
-
-      if (checkCollision(piece, gridState)) {
-        piece.coords = oldCoords;
-      } else {/* Lines 827-836 omitted */}
-      updateGhostPiece();
-    }
-
-    function updateGhostPiece() {
-      if (!activePiece) return;
-
-      while (ghostMeshGroup.children.length > 0) {/* Lines 844-845 omitted */}
-
-      let ghostY = activePiece.y;
-      while (!checkCollision(activePiece, gridState, 0, ghostY - activePiece.y - 1, 0)) {/* Lines 849-850 omitted */}
-
-      const pos = gridToWorld(activePiece.x, ghostY, activePiece.z);
-      ghostMeshGroup.position.set(pos.x, pos.y, pos.z);
-
-      for (let coord of activePiece.coords) {/* Lines 856-859 omitted */}
-    }
-
-    function lockPiece(piece) {
-      sound.playDrop();
-      for (let coord of piece.coords) {/* Lines 865-877 omitted */}
-
-      scene.remove(piece.meshGroup);
-
-      if (piece.isBomb) {/* Lines 882-883 omitted */}
-
-      checkAndClearLayers();
-
-      // Check if top row is dangerously full to give visual ticker alert
-      let isNearCeiling = false;
-      for (let x = 0; x < gridX; x++) {/* Lines 890-896 omitted */}
-      if (isNearCeiling) {/* Lines 898-899 omitted */}
-
-      // Spawn Next
-      let pool = (currentStageIdx < 3) ? PIECES_BASIC : (STAGES[currentStageIdx].allowBombItems ? PIECES_3D : PIECES_3D.slice(0, PIECES_3D.length - 1));
-      activePiece = spawnPiece(nextPieceData);
-      nextPieceData = pool[Math.floor(Math.random() * pool.length)];
-      renderNextPiecePreview(nextPieceData);
-
-      updatePieceMeshPosition(activePiece);
-      updateGhostPiece();
-
-      if (checkCollision(activePiece, gridState)) {/* Lines 911-912 omitted */}
-    }
-
-    function triggerBombExplosion(cx, cy, cz) {
-      sound.playExplosion();
-      for (let dx = -1; dx <= 1; dx++) {/* Lines 918-929 omitted */}
-      score += 150;
-      updateHUD();
-    }
-
-    function checkAndClearLayers() {
-      let clearedCount = 0;
-
-      for (let y = 0; y < gridY; y++) {/* Lines 938-978 omitted */}
-
-      if (clearedCount > 0) {/* Lines 981-995 omitted */}
-    }
-
-    function triggerWhaleSwimTeaser() {
-      sound.playWhaleSong();
-      document.getElementById('hud-teaser-msg').classList.remove('hidden');
-      whaleMeshGroup.position.set(-45, 10, -25);
-    }
-
-    function moveActivePieceRelative(screenDx, screenDz) {
-      if (!activePiece) return;
-
-      let q = ((Math.round(cameraAngleX / (Math.PI / 2)) % 4) + 4) % 4;
-      let worldDx = 0, worldDz = 0;
-
-      if (q === 0) { worldDx = screenDx; worldDz = screenDz; }
-      else if (q === 1) { worldDx = screenDz; worldDz = -screenDx; }
-      else if (q === 2) { worldDx = -screenDx; worldDz = -screenDz; }
-      else if (q === 3) { worldDx = -screenDz; worldDz = screenDx; }
-
-      if (!checkCollision(activePiece, gridState, worldDx, 0, worldDz)) {/* Lines 1016-1021 omitted */}
-    }
-
-    function stepActivePiece() {
-      if (!activePiece) return;
-
-      /* Lines 1027-1034 omitted */
-    }
-
-    function hardDrop3D() {/* Lines 1037-1044 omitted */}
-
-    function clearAllSceneBlocks() {/* Lines 1047-1073 omitted */}
-
-    function loadStage(stageIdx) {/* Lines 1076-1105 omitted */}
-
-    function startCurrentStage() {/* Lines 1108-1134 omitted */}
-
-    function onStageCleared() {/* Lines 1137-1152 omitted */}
-
-    function onStageFailed(reason = "블록이 천장까지 가득 차서 공간이 부족합니다!") {/* Lines 1155-1171 omitted */}
-
-    function updateHUD() {/* Lines 1174-1185 omitted */}
-
-    function renderStageMapGrid() {/* Lines 1188-1211 omitted */}
-
-    function animate(time = 0) {/* Lines 1214-1244 omitted */}
-
-    // Keyboard Binds
-    window.addEventListener('keydown', e => {
-    });
-
-    // Touch Binds
-    document.getElementById('t-left').onclick = () => moveActivePieceRelative(-1, 0);
-    document.getElementById('t-right').onclick = () => moveActivePieceRelative(1, 0);
-    document.getElementById('t-fw').onclick = () => moveActivePieceRelative(0, -1);
-    document.getElementById('t-bw').onclick = () => moveActivePieceRelative(0, 1);
-    document.getElementById('t-down').onclick = () => stepActivePiece();
-    document.getElementById('t-rot-r').onclick = () => rotatePiece3D(activePiece, 'Y');
-    document.getElementById('t-drop').onclick = () => hardDrop3D();
-
-    // Skill Binds
-    document.getElementById('skill-bomb').onclick = () => {/* Lines 1284-1290 omitted */};
-
-    document.getElementById('skill-vortex').onclick = () => {/* Lines 1293-1307 omitted */};
-
-    // UI Modal Flow Control
-    document.getElementById('btn-start-stage').onclick = startCurrentStage;
-    document.getElementById('btn-next-stage').onclick = () => {/* Lines 1312-1313 omitted */};
-    document.getElementById('btn-retry-stage').onclick = () => {/* Lines 1315-1316 omitted */};
-
-    document.getElementById('btn-stages').onclick = () => {/* Lines 1319-1321 omitted */};
-    document.getElementById('btn-close-stages').onclick = () => {/* Lines 1323-1324 omitted */};
-
-    document.getElementById('btn-reset-cam').onclick = () => {/* Lines 1327-1329 omitted */};
-
-    document.getElementById('btn-pause').onclick = () => {/* Lines 1332-1335 omitted */};
-
-    // Bootstrap on Window Load
-    window.onload = function () {/* Lines 1339-1342 omitted */};
-
   </script>
 </body>
 </html>
