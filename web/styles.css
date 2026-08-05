@@ -1,0 +1,37 @@
+:root{
+  --bg:#0b1020;
+  --glass-bg:rgba(255,255,255,0.06);
+  --accent-1:#7c4dff; /* purple */
+  --accent-2:#37a2ff; /* blue */
+  --accent-3:#2fe08b; /* green */
+  --text:#eaf0ff;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:'Sora', 'Space Grotesk', system-ui, -apple-system, 'Pretendard', 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;background:linear-gradient(180deg,var(--bg) 0%, #071022 60%);color:var(--text);}
+.particle-bg{position:fixed;inset:0;z-index:0}
+.site-header{position:fixed;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:10}
+.logo{font-weight:700;font-size:20px;letter-spacing:2px}
+.nav a{color:var(--text);margin-left:18px;text-decoration:none;opacity:0.9}
+.nav .cta{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));padding:8px 12px;border-radius:8px;color:white}
+main{position:relative;z-index:5;padding-top:100px}
+.hero{min-height:72vh;display:flex;align-items:center;justify-content:center}
+.hero-inner{width:min(1100px,92%);text-align:center;padding:48px;border-radius:16px;backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.06);background:linear-gradient(135deg, rgba(124,77,255,0.08), rgba(55,162,255,0.04));}
+.hero h1{font-size:48px;margin:0 0 8px}
+.lead{opacity:0.9}
+.hero-ctas{margin-top:18px}
+.btn{display:inline-block;padding:10px 18px;margin:0 8px;border-radius:12px;color:var(--text);text-decoration:none;border:1px solid rgba(255,255,255,0.06)}
+.btn.primary{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));box-shadow:0 6px 18px rgba(124,77,255,0.14)}
+.section{padding:64px 24px}
+.section-title{font-size:20px;margin:0 0 18px}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.game-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(6px)}
+.game-thumb{height:120px;background:#111;border-radius:8px;margin-bottom:8px}
+.game-title{font-weight:600}
+.community-preview{display:flex;gap:12px;padding:18px;border-radius:12px}
+.team-grid{display:flex;gap:12px}
+.team-card{padding:16px;width:220px;text-align:center}
+.avatar{width:72px;height:72px;border-radius:18px;background:linear-gradient(90deg,var(--accent-1),var(--accent-3));display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 8px}
+.glass{background:var(--glass-bg)}
+.site-footer{padding:28px 24px;text-align:center;opacity:0.9}
+
+@media (max-width:600px){.hero h1{font-size:32px}.team-grid{flex-direction:column}}

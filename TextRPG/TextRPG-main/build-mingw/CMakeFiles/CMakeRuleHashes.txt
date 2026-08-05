@@ -1,0 +1,8 @@
+# Hashes of file build rules.
+f4b6e35633a7c6488f5e36767240e7b7 TextRPG/CMakeFiles/Copy-Assets
+d11bee95be853dc37f7b0bbcabc23463 bin/assets/xml_files/ArmorDefs.xml
+bfab04c329da2674fac1c8604f33306e bin/assets/xml_files/ArmorShopDefs_1.xml
+9e2333ea0fe3e0f7733d820c36509013 bin/assets/xml_files/ItemDefs.xml
+db2607dac648fc0d53a25f8028030f4e bin/assets/xml_files/WeaponDefs.xml
+a8f640bf3493f0adbde8db79f5931c49 bin/assets/xml_files/WeaponShopDef_1.xml
+e1574d5c0ddd365df90b93f7329ff064 bin/assets/xml_files/playerDefs.xml

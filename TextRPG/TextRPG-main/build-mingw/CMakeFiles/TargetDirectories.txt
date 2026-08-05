@@ -1,0 +1,11 @@
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/CMakeFiles/edit_cache.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/CMakeFiles/rebuild_cache.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/dependencies/CMakeFiles/edit_cache.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/dependencies/CMakeFiles/rebuild_cache.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/dependencies/tinyxml2/CMakeFiles/tinyxml2.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/dependencies/tinyxml2/CMakeFiles/edit_cache.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/dependencies/tinyxml2/CMakeFiles/rebuild_cache.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/TextRPG/CMakeFiles/TextRPG.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/TextRPG/CMakeFiles/Copy-Assets.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/TextRPG/CMakeFiles/edit_cache.dir
+D:/___busan_project/TextRPG/TextRPG-main/build-mingw/TextRPG/CMakeFiles/rebuild_cache.dir

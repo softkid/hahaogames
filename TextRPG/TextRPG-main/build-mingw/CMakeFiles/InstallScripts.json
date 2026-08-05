@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/___busan_project/TextRPG/TextRPG-main/build-mingw/cmake_install.cmake",
+		"D:/___busan_project/TextRPG/TextRPG-main/build-mingw/dependencies/cmake_install.cmake",
+		"D:/___busan_project/TextRPG/TextRPG-main/build-mingw/dependencies/tinyxml2/cmake_install.cmake",
+		"D:/___busan_project/TextRPG/TextRPG-main/build-mingw/TextRPG/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
