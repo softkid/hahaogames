@@ -490,22 +490,47 @@
     document.getElementById('t-rot-r').onclick = () => rotatePiece3D(activePiece, 'Y');
     document.getElementById('t-drop').onclick = () => hardDrop3D();
 
-    // Touch handlers: support touchstart for immediate response and active state
-    function bindTouch(id, fn) {
+    // Touch & pointer handlers with long-press auto-repeat support
+    function attachRepeatControl(id, fn, opts = {}) {
       const el = document.getElementById(id);
       if (!el) return;
-      el.addEventListener('touchstart', e => { e.preventDefault(); el.classList.add('active'); fn(); }, { passive: false });
-      el.addEventListener('touchend', () => el.classList.remove('active'));
-      el.addEventListener('touchcancel', () => el.classList.remove('active'));
+      const initialDelay = opts.initialDelay || 300;
+      const repeatInterval = opts.repeatInterval || 120;
+      let repeatTimer = null, intervalId = null;
+
+      const start = (e) => {
+        if (e && e.cancelable) e.preventDefault();
+        el.classList.add('active');
+        try { fn(); } catch (err) { console.error('control fn error', err); }
+        repeatTimer = setTimeout(() => {
+          intervalId = setInterval(() => { try { fn(); } catch (err) { console.error(err); } }, repeatInterval);
+        }, initialDelay);
+      };
+
+      const stop = () => {
+        el.classList.remove('active');
+        if (repeatTimer) { clearTimeout(repeatTimer); repeatTimer = null; }
+        if (intervalId) { clearInterval(intervalId); intervalId = null; }
+      };
+
+      // Touch
+      el.addEventListener('touchstart', start, { passive: false });
+      el.addEventListener('touchend', stop);
+      el.addEventListener('touchcancel', stop);
+
+      // Mouse / pointer
+      el.addEventListener('mousedown', (e) => { if (e.button !== 0) return; start(e); });
+      window.addEventListener('mouseup', stop);
+      el.addEventListener('mouseleave', stop);
     }
 
-    bindTouch('t-left', () => moveActivePieceRelative(-1, 0));
-    bindTouch('t-right', () => moveActivePieceRelative(1, 0));
-    bindTouch('t-fw', () => moveActivePieceRelative(0, -1));
-    bindTouch('t-bw', () => moveActivePieceRelative(0, 1));
-    bindTouch('t-down', () => stepActivePiece());
-    bindTouch('t-rot-r', () => rotatePiece3D(activePiece, 'Y'));
-    bindTouch('t-drop', () => hardDrop3D());
+    attachRepeatControl('t-left', () => moveActivePieceRelative(-1, 0));
+    attachRepeatControl('t-right', () => moveActivePieceRelative(1, 0));
+    attachRepeatControl('t-fw', () => moveActivePieceRelative(0, -1));
+    attachRepeatControl('t-bw', () => moveActivePieceRelative(0, 1));
+    attachRepeatControl('t-down', () => stepActivePiece());
+    attachRepeatControl('t-rot-r', () => rotatePiece3D(activePiece, 'Y'));
+    attachRepeatControl('t-drop', () => hardDrop3D());
 
     // simple skill bindings (placeholders)
     const skillBomb = document.getElementById('skill-bomb'); if(skillBomb) skillBomb.onclick = () => { if(activePiece && activePiece.isBomb){ triggerBombExplosion(activePiece.x, activePiece.y, activePiece.z); } };
