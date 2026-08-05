@@ -45,6 +45,16 @@
       transform: scale(0.95);
     }
 
+    /* Mobile touch improvements */
+    #touch-controls { z-index: 60; }
+    .touch-btn.active { transform: scale(0.96); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+
+    @media (max-width: 1024px) {
+      .touch-btn { padding: 14px 18px; font-size: 14px; min-width: 64px; }
+      .touch-btn.round { border-radius: 12px; }
+      .card-panel { backdrop-filter: blur(8px); }
+    }
+
     /* Custom Scrollbar for Level Select Modal */
     ::-webkit-scrollbar {
       width: 6px;
@@ -157,18 +167,18 @@
 </div>
 
 <div class="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 pointer-events-auto lg:hidden">
-    <div class="flex gap-1.5">
-      <button id="t-fw" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-cyan-300">▲ 전진 (↑)</button>
+    <div id="touch-controls" class="flex gap-1.5">
+      <button id="t-fw" class="touch-btn round px-4 py-2 rounded-lg font-bold text-xs text-cyan-300" aria-label="forward">▲ 전진 (↑)</button>
     </div>
     <div class="flex gap-1.5">
-      <button id="t-left" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">◀ 좌 (←)</button>
-      <button id="t-down" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">▼ 하강 (S)</button>
-      <button id="t-right" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">우 ▶ (→)</button>
+      <button id="t-left" class="touch-btn round px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200" aria-label="left">◀ 좌 (←)</button>
+      <button id="t-down" class="touch-btn round px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200" aria-label="down">▼ 하강 (S)</button>
+      <button id="t-right" class="touch-btn round px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200" aria-label="right">우 ▶ (→)</button>
     </div>
     <div class="flex gap-1.5">
-      <button id="t-bw" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-cyan-300">▼ 후진 (↓)</button>
-      <button id="t-rot-r" class="touch-btn px-3 py-2 rounded-lg font-bold text-xs text-amber-400">🔄 3D 회전</button>
-      <button id="t-drop" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-rose-400">⚡ 하드드롭</button>
+      <button id="t-bw" class="touch-btn round px-4 py-2 rounded-lg font-bold text-xs text-cyan-300" aria-label="back">▼ 후진 (↓)</button>
+      <button id="t-rot-r" class="touch-btn round px-3 py-2 rounded-lg font-bold text-xs text-amber-400" aria-label="rotate">🔄 3D 회전</button>
+      <button id="t-drop" class="touch-btn round px-4 py-2 rounded-lg font-bold text-xs text-rose-400" aria-label="drop">⚡ 하드드롭</button>
     </div>
   </div>
 
@@ -479,6 +489,23 @@
     document.getElementById('t-down').onclick = () => stepActivePiece();
     document.getElementById('t-rot-r').onclick = () => rotatePiece3D(activePiece, 'Y');
     document.getElementById('t-drop').onclick = () => hardDrop3D();
+
+    // Touch handlers: support touchstart for immediate response and active state
+    function bindTouch(id, fn) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('touchstart', e => { e.preventDefault(); el.classList.add('active'); fn(); }, { passive: false });
+      el.addEventListener('touchend', () => el.classList.remove('active'));
+      el.addEventListener('touchcancel', () => el.classList.remove('active'));
+    }
+
+    bindTouch('t-left', () => moveActivePieceRelative(-1, 0));
+    bindTouch('t-right', () => moveActivePieceRelative(1, 0));
+    bindTouch('t-fw', () => moveActivePieceRelative(0, -1));
+    bindTouch('t-bw', () => moveActivePieceRelative(0, 1));
+    bindTouch('t-down', () => stepActivePiece());
+    bindTouch('t-rot-r', () => rotatePiece3D(activePiece, 'Y'));
+    bindTouch('t-drop', () => hardDrop3D());
 
     // simple skill bindings (placeholders)
     const skillBomb = document.getElementById('skill-bomb'); if(skillBomb) skillBomb.onclick = () => { if(activePiece && activePiece.isBomb){ triggerBombExplosion(activePiece.x, activePiece.y, activePiece.z); } };
