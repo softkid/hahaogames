@@ -1,38 +1,738 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CrazyTetris3D — HAHAO</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CRAZY TETRIS 3D - 100 STAGE JOURNEY</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
-    html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:#0f1720;color:#fff;display:flex;align-items:center;justify-content:center}
-    .wrap{width:820px;max-width:94%;background:linear-gradient(180deg,#0b1220 0%, #071018 100%);padding:28px;border-radius:12px;box-shadow:0 30px 80px rgba(2,6,23,0.6)}
-    h1{margin:0 0 10px;font-size:28px}
-    p{color:#9aa0a6}
-    #start{margin-top:18px;padding:10px 14px;border-radius:8px;border:0;background:#fff;color:#071018;font-weight:600}
-    .placeholder-3d{width:100%;height:420px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:10px;margin-top:18px;display:flex;align-items:center;justify-content:center;color:#9aa0a6}
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;600;800&display=swap');
+        
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #040408;
+      color: #f4f4f5;
+      touch-action: manipulation;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Glassmorphism Panel */
+    .card-panel {
+      background-color: rgba(12, 12, 20, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Touch Control Button Styles */
+    .touch-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.12s ease;
+    }
+    .touch-btn:active {
+      background: rgba(244, 63, 94, 0.35);
+      border-color: rgba(244, 63, 94, 0.7);
+      transform: scale(0.95);
+    }
+
+    /* Custom Scrollbar for Level Select Modal */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 15, 25, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(244, 63, 94, 0.5);
+      border-radius: 3px;
+    }
+
+    /* WebGL Canvas Background Overlay */
+    #webgl-canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <h1>CrazyTetris3D</h1>
-    <p>A 3D-inspired Tetris experience — demo placeholder (loads in iframe from HAHAO).</p>
-    <div class="placeholder-3d">CrazyTetris3D preview — coming soon</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-      <div style="color:#6b7280;font-size:13px">Author: HAHAO Studio</div>
-      <button id="start">Start</button>
+<body class="w-screen h-screen relative overflow-hidden">
+
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Header Header -->
+  <header class="absolute top-3 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none">
+    <h1 class="text-xl sm:text-3xl font-black font-orbitron tracking-widest uppercase">
+      <span class="text-rose-500">CRAZY</span> <span class="text-cyan-400">TETRIS</span> <span class="text-amber-400">3D</span>
+    </h1>
+    <p id="sub-theme-title" class="text-[11px] sm:text-xs text-cyan-300 mt-0.5 font-semibold tracking-wide">
+      🌌 STAGE 1: 심해의 여정 (4x4 격자 • 기본 입문)
+    </p>
+  </header>
+
+  <!-- Top Left & Right In-Game HUD Panel -->
+  <div class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-3 sm:p-5">
+        
+    <!-- Top Status Bar -->
+    <div class="flex justify-between items-start w-full max-w-6xl mx-auto">
+            
+      <!-- Left Info Panel -->
+      <div class="card-panel p-3 rounded-xl pointer-events-auto space-y-1.5 w-36 sm:w-44">
+        /* Lines 94-106 omitted */
+      </div>
+
+      <!-- Center Gravity / Teaser HUD Indicator -->
+      <div id="hud-gravity-box" class="card-panel py-2 px-4 rounded-xl pointer-events-auto text-center border-cyan-500/30">
+        /* Lines 110-115 omitted */
+      </div>
+
+      <!-- Right Systems Button Panel -->
+      <div class="card-panel p-3 rounded-xl pointer-events-auto text-center w-36 sm:w-44 space-y-2">
+        /* Lines 119-135 omitted */
+      </div>
+    </div>
+
+    <!-- Center Notification Ticker Banner -->
+  <div class="w-full flex justify-center">
+    <div id="hint-ticker" class="card-panel py-1.5 px-4 rounded-lg text-center text-xs text-amber-300 font-semibold border-amber-500/40">
+      💡 팁: Space(바닥 하드드롭) / ↑↓(깊이 전후진) / ←→(좌우) / R,F,E(3D회전)
     </div>
   </div>
+
+  <!-- Bottom Controls & Camera Hint + Skills Panel -->
+  <div class="w-full max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-stretch sm:items-end gap-3 mb-1">
+        
+    <!-- Compact Consolidated Key & Camera Hint Panel -->
+    <div class="card-panel px-3.5 py-2.5 rounded-xl text-[11px] text-zinc-300 pointer-events-auto flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span>⚡ 바닥낙하: <b class="text-rose-400 font-bold">Space</b></span>
+      <span class="text-zinc-600">|</span>
+      <span>↔️↕️ 이동: <b class="text-cyan-300 font-bold">화살표(←→↑↓)</b></span>
+      <span class="text-zinc-600">|</span>
+      <span>🔄 3D회전: <b class="text-amber-400 font-bold">R / F / E</b></span>
+      <span class="text-zinc-600">|</span>
+      <span>🖱️ 드래그: <b class="text-zinc-300">뷰 회전</b></span>
+      <span class="text-zinc-600">|</span>
+      <button id="btn-reset-cam" class="text-cyan-400 hover:text-cyan-300 font-bold underline">뷰 리셋</button>
+    </div>
+
+    <!-- Skills Panel -->
+    <div id="skill-panel" class="card-panel p-2.5 rounded-xl pointer-events-auto w-full sm:w-72 space-y-1.5">
+      <div class="text-[10px] font-bold text-rose-400 uppercase tracking-wider flex justify-between">
+        /* Lines 164-166 omitted */
+      </div>
+
+      <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden border border-zinc-800">
+        /* Lines 169-170 omitted */
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+        /* Lines 173-179 omitted */
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 pointer-events-auto lg:hidden">
+    <div class="flex gap-1.5">
+      <button id="t-fw" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-cyan-300">▲ 전진 (↑)</button>
+    </div>
+    <div class="flex gap-1.5">
+      <button id="t-left" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">◀ 좌 (←)</button>
+      <button id="t-down" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">▼ 하강 (S)</button>
+      <button id="t-right" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">우 ▶ (→)</button>
+    </div>
+    <div class="flex gap-1.5">
+      <button id="t-bw" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-cyan-300">▼ 후진 (↓)</button>
+      <button id="t-rot-r" class="touch-btn px-3 py-2 rounded-lg font-bold text-xs text-amber-400">🔄 3D 회전</button>
+      <button id="t-drop" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-rose-400">⚡ 하드드롭</button>
+    </div>
+  </div>
+
+    
+  <!-- 100 Stage Select Modal -->
+  <div id="modal-stages" class="absolute inset-0 bg-zinc-950/95 backdrop-blur-lg z-40 hidden flex flex-col items-center justify-between p-4 sm:p-6">
+    <div class="text-center mt-2">
+      <h2 class="text-2xl sm:text-4xl font-black font-orbitron text-rose-500 tracking-wider">
+        /* Lines 205-206 omitted */
+      </h2>
+      <p class="text-xs text-zinc-400 mt-1">단계별로 격자 크기와 깊이가 확장되는 긍정의 성장 여행</p>
+    </div>
+
+    <!-- Scrollable Stage Grid -->
+    <div class="w-full max-w-4xl my-4 overflow-y-auto max-h-[60vh] p-2 grid grid-cols-5 sm:grid-cols-10 gap-2 text-center" id="stage-grid-container">
+      <!-- Stage buttons generated dynamically via JS -->
+    </div>
+
+    <div class="flex gap-3 mb-2">
+      <button id="btn-mode-campaign" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-full font-bold text-xs">
+        /* Lines 217-218 omitted */
+      </button>
+      <button id="btn-mode-infinite" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-full font-bold text-xs">
+        /* Lines 220-221 omitted */
+      </button>
+      <button id="btn-close-stages" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-full font-bold text-xs text-zinc-300">
+        /* Lines 223-224 omitted */
+      </button>
+    </div>
+  </div>
+
+  <!-- Level Briefing & Tip Modal Overlay -->
+  <div id="modal-briefing" class="absolute inset-0 bg-zinc-950/90 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center">
+    <div class="card-panel p-6 sm:p-8 rounded-2xl max-w-md w-full space-y-4 text-left border-rose-500/40">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+        /* Lines 232-234 omitted */
+      </div>
+
+      <div class="space-y-2 text-xs text-zinc-300">
+        /* Lines 237-240 omitted */
+      </div>
+
+      <div class="bg-zinc-900/90 p-3.5 rounded-xl border border-amber-500/30 text-xs text-amber-200 leading-relaxed">
+        /* Lines 243-245 omitted */
+      </div>
+
+      <button id="btn-start-stage" class="w-full py-3.5 bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold rounded-xl text-sm uppercase tracking-wider shadow-lg">
+        /* Lines 248-249 omitted */
+      </button>
+    </div>
+  </div>
+
+  <!-- Stage Clear / Defeat Modal -->
+  <div id="modal-result" class="absolute inset-0 bg-zinc-950/95 backdrop-blur-md z-30 hidden flex flex-col items-center justify-center p-6 text-center">
+    <h2 id="result-title" class="text-3xl sm:text-5xl font-black font-orbitron text-amber-400 mb-2">
+      STAGE CLEAR! 🎉
+    </h2>
+    <p id="result-desc" class="text-xs sm:text-sm text-zinc-300 mb-6 leading-relaxed max-w-sm font-medium">
+      축하합니다! 3D 레이어를 성공적으로 완성하였습니다.
+    </p>
+
+    <div class="flex gap-3">
+      <button id="btn-next-stage" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-full text-sm tracking-wider uppercase shadow-lg">
+        /* Lines 264-265 omitted */
+      </button>
+      <button id="btn-retry-stage" class="px-6 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold rounded-full text-sm uppercase">
+        /* Lines 267-268 omitted */
+      </button>
+    </div>
+  </div>
+
   <script>
-    document.getElementById('start').addEventListener('click',()=>{
-      // If embedded in modal iframe, focus; otherwise open in new window
-      if(window.self !== window.top){
-        // inside iframe
-        window.focus();
-      } else {
-        window.open(window.location.href,'_blank');
-      }
+    /**
+     * CRAZY TETRIS 3D: 100 STAGE JOURNEY - Sound Engine
+     */
+    class SoundEngine {
+      constructor() {/* Lines 278-280 omitted */}
+
+      init() {/* Lines 283-286 omitted */}
+
+      playTone(freq, type, duration, vol = 0.08) {/* Lines 289-302 omitted */}
+
+      playMove() { this.playTone(320, 'sine', 0.05, 0.04); }
+      playRotate() { this.playTone(480, 'triangle', 0.07, 0.05); }
+      playDrop() { this.playTone(180, 'square', 0.1, 0.07); }
+            
+      playExplosion() {/* Lines 309-323 omitted */}
+
+      playWhaleSong() {/* Lines 326-342 omitted */}
+    }
+
+    const sound = new SoundEngine();
+
+        
+    // Background Symbolic Themes Definition
+    const STAGE_THEMES = {
+      OCEAN: { name: '🌊 심해 오디세이', fogColor: 0x051329, bgColor: 0x020813, accentColor: 0x38bdf8 },
+      CYBER: { name: '🏙️ 네온 사이버 시티', fogColor: 0x140728, bgColor: 0x090314, accentColor: 0xa855f7 },
+      COSMOS: { name: '🌌 은하수 우주선', fogColor: 0x070c1e, bgColor: 0x030611, accentColor: 0xf43f5e },
+      INFERNO: { name: '🔥 용암 화산지대', fogColor: 0x210705, bgColor: 0x110302, accentColor: 0xf97316 },
+      QUANTUM: { name: '🔮 퀀텀 아우로라', fogColor: 0x03211e, bgColor: 0x011210, accentColor: 0x10b981 }
+    };
+
+    // Helper to generate 100 Stage Configurations systematically
+    function generate100Stages() {
+      const stages = [];
+      for (let i = 1; i <= 100; i++) {/* Lines 361-409 omitted */}
+      return stages;
+    }
+
+    const STAGES = generate100Stages();
+
+    // 3D Polyomino Pieces (기초 블록과 복잡한 블록 구분)
+    const PIECES_BASIC = [
+      { name: 'Single 1x1', color: 0x00f0ff, coords: [[0,0,0]] },
+      { name: 'Domino 1x2', color: 0x06b6d4, coords: [[0,0,0],[1,0,0]] },
+      { name: 'Square 2x2', color: 0xeab308, coords: [[0,0,0],[1,0,0],[0,0,1],[1,0,1]] },
+      { name: 'I-Bar 1x3', color: 0x10b981, coords: [[0,0,0],[1,0,0],[-1,0,0]] },
+      { name: 'I-Bar 1x4', color: 0x3b82f6, coords: [[0,0,0],[1,0,0],[2,0,0],[-1,0,0]] },
+      { name: 'L-Flat', color: 0xf97316, coords: [[0,0,0],[1,0,0],[0,0,1]] }
+    ];
+
+    const PIECES_ADVANCED = [
+      { name: 'Cube 2x2x2', color: 0xca8a04, coords: [[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]] },
+      { name: 'Corner 3D', color: 0xa855f7, coords: [[0,0,0],[1,0,0],[0,1,0],[0,0,1]] },
+      { name: 'L-Shape 3D', color: 0xf59e0b, coords: [[0,0,0],[0,1,0],[0,2,0],[1,0,0]] },
+      { name: 'T-Shape 3D', color: 0x6366f1, coords: [[0,0,0],[-1,0,0],[1,0,0],[0,1,0]] },
+      { name: 'S-Shape 3D', color: 0x10b981, coords: [[0,0,0],[1,0,0],[0,1,0],[-1,1,0]] },
+      { name: 'Bomb 3D', color: 0xef4444, isBomb: true, coords: [[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]] }
+    ];
+
+    const PIECES_3D = [...PIECES_BASIC, ...PIECES_ADVANCED];
+
+    let scene, camera, renderer;
+    let containerMesh, floorGridMesh;
+    let activePiece = null, nextPieceData = null;
+    let ghostMeshGroup = null;
+    let particleSystem = [];
+    let backgroundParticles = null;
+    let whaleMeshGroup = null;
+
+    // Current Stage & Game State
+    let currentStageIdx = 0; // 0 = Stage 1
+    let unlockedMaxStage = 1; // Highest stage unlocked
+    let isInfiniteMode = false;
+
+    let gridX = 4, gridY = 8, gridZ = 4;
+    let gridState = [];
+    let score = 0, linesCleared = 0;
+    let chaosEnergy = 0;
+    let gameRunning = false, isPaused = false;
+    let dropInterval = 1000, dropCounter = 0, lastTime = 0;
+
+    // Render 2D Isometric Mini Preview for NEXT BLOCK
+    function renderNextPiecePreview(pData) {
+      const canvasEl = document.getElementById('next-block-canvas');
+      if (!canvasEl) return;
+      const ctx = canvasEl.getContext('2d');
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+      if (!pData) return;
+
+      const coords = pData.coords;
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+      const isoCoords = coords.map(([x, y, z]) => {
+        /* Lines 468-470 omitted */
+        return { px, py, x, y, z };
+      });
+
+      isoCoords.forEach(c => {
+        /* Lines 474-477 omitted */
+        if (c.py > maxY) maxY = c.py;
+      });
+
+      const centerX = canvasEl.width / 2 - (minX + maxX) / 2;
+      const centerY = canvasEl.height / 2 - (minY + maxY) / 2;
+
+      // Depth sorting for isometric drawing
+      isoCoords.sort((a, b) => (a.x + a.z - a.y) - (b.x + b.z - b.y));
+
+      const hexColor = '#' + pData.color.toString(16).padStart(6, '0');
+
+      isoCoords.forEach(c => {
+        /* Lines 489-497 omitted */
+        ctx.strokeRect(sx - w/2, sy - h/2, w, h);
+      });
+
+      const label = document.getElementById('next-block-label');
+      if (label) label.innerText = pData.name;
+    }
+
+    // Camera Drag Controls
+    let isDragging = false, previousMousePosition = { x: 0, y: 0 };
+    let cameraAngleX = 0, cameraAngleY = Math.PI / 6, cameraDistance = 20;
+
+    function init3DScene() {
+      const canvasEl = document.getElementById('webgl-canvas');
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x051329, 0.02);
+
+      camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 1000);
+      updateCameraPosition();
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Enable Directional Shadow Mapping for realistic block shadows
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      // Ambient & Directional Shadow Lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+      dirLight.position.set(15, 30, 20);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      dirLight.shadow.camera.near = 0.5;
+      dirLight.shadow.camera.far = 80;
+      dirLight.shadow.camera.left = -15;
+      dirLight.shadow.camera.right = 15;
+      dirLight.shadow.camera.top = 15;
+      dirLight.shadow.camera.bottom = -15;
+      dirLight.shadow.bias = -0.0005;
+      scene.add(dirLight);
+
+      // Secondary Fill Light for depth
+      const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.35);
+      fillLight.position.set(-20, 10, -15);
+      scene.add(fillLight);
+
+      // Ghost Piece Group
+      ghostMeshGroup = new THREE.Group();
+      scene.add(ghostMeshGroup);
+
+      // Background Atmospheric Stars/Bubbles
+      createBackgroundParticleSystem();
+
+      // Create Majestic 3D Whale Mesh
+      create3DWhaleMesh();
+
+      // Mouse Camera Orbit Handling
+      canvasEl.addEventListener('mousedown', e => {
+        /* Lines 559-560 omitted */
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      });
+
+      window.addEventListener('mousemove', e => {
+        /* Lines 564-572 omitted */
+        updateCameraPosition();
+      });
+
+      window.addEventListener('mouseup', () => isDragging = false);
+
+      canvasEl.addEventListener('wheel', e => {
+        /* Lines 578-579 omitted */
+        updateCameraPosition();
+      });
+
+      window.addEventListener('resize', onWindowResize);
+    }
+
+    function createBackgroundParticleSystem() {
+      if (backgroundParticles) scene.remove(backgroundParticles);
+
+      const particleCount = 200;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount * 3; i += 3) {/* Lines 593-596 omitted */}
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const material = new THREE.PointsMaterial({
+        /* Lines 600-603 omitted */
+        opacity: 0.6
+      });
+
+      backgroundParticles = new THREE.Points(geometry, material);
+      scene.add(backgroundParticles);
+    }
+
+    // Creates a Majestic Low-Poly Glowing Whale that swims gracefully in the background
+    function create3DWhaleMesh() {
+      whaleMeshGroup = new THREE.Group();
+
+      // Whale Body
+      const bodyGeo = new THREE.ConeGeometry(1.5, 6, 8);
+      bodyGeo.rotateX(Math.PI / 2);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        /* Lines 618-622 omitted */
+        emissiveIntensity: 0.8
+      });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.castShadow = true;
+      whaleMeshGroup.add(body);
+
+      // Tail
+      const tailGeo = new THREE.BoxGeometry(2.5, 0.2, 1.2);
+      const tail = new THREE.Mesh(tailGeo, bodyMat);
+      tail.position.set(0, 0, -3.2);
+      tail.castShadow = true;
+      whaleMeshGroup.add(tail);
+
+      // Flippers
+      const flipperGeo = new THREE.BoxGeometry(3.5, 0.15, 1.0);
+      const flippers = new THREE.Mesh(flipperGeo, bodyMat);
+      flippers.position.set(0, 0, 0.8);
+      flippers.castShadow = true;
+      whaleMeshGroup.add(flippers);
+
+      whaleMeshGroup.position.set(-35, 12, -20);
+      scene.add(whaleMeshGroup);
+    }
+
+    function buildGridContainer(gx, gy, gz, accentColor = 0x38bdf8) {
+      if (containerMesh) scene.remove(containerMesh);
+
+      containerMesh = new THREE.Group();
+
+      // Cage Wireframe
+      const boxGeo = new THREE.BoxGeometry(gx, gy, gz);
+      const edgeGeo = new THREE.EdgesGeometry(boxGeo);
+      const edgeMat = new THREE.LineBasicMaterial({ color: accentColor, linewidth: 2, transparent: true, opacity: 0.5 });
+      const wireframe = new THREE.LineSegments(edgeGeo, edgeMat);
+      containerMesh.add(wireframe);
+
+      // Floor Grid Subdivision
+      floorGridMesh = new THREE.GridHelper(Math.max(gx, gz), Math.max(gx, gz), accentColor, 0x334155);
+      floorGridMesh.position.y = -gy / 2;
+      containerMesh.add(floorGridMesh);
+
+      // Translucent Glass Floor that receives realistic shadows
+      const floorGeo = new THREE.PlaneGeometry(gx, gz);
+      const floorMat = new THREE.MeshStandardMaterial({
+        /* Lines 666-671 omitted */
+        side: THREE.DoubleSide
+      });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = Math.PI / 2;
+      floor.position.y = -gy / 2 - 0.01;
+      floor.receiveShadow = true;
+      containerMesh.add(floor);
+
+      scene.add(containerMesh);
+    }
+
+    function create3DGridArray(gx, gy, gz) {
+      const arr = new Array(gx);
+      for (let x = 0; x < gx; x++) {/* Lines 685-689 omitted */}
+      return arr;
+    }
+
+    function gridToWorld(x, y, z) {
+      return {/* Lines 695-698 omitted */};
+    }
+
+    function updateCameraPosition() {
+      camera.position.x = cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
+      camera.position.y = cameraDistance * Math.sin(cameraAngleY);
+      camera.position.z = cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+      camera.lookAt(0, 0, 0);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function createBlockMesh(colorHex, isGhost = false, isBomb = false) {
+      const geo = new THREE.BoxGeometry(0.96, 0.96, 0.96);
+      let mat;
+
+      if (isGhost) {
+        mat = new THREE.MeshBasicMaterial({ color: colorHex, wireframe: true, transparent: true, opacity: 0.35 });
+      } else {/* Lines 721-728 omitted */}
+
+      const mesh = new THREE.Mesh(geo, mat);
+      if (!isGhost) {/* Lines 732-734 omitted */}
+
+      const edgesGeo = new THREE.EdgesGeometry(geo);
+      const edgesMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: isGhost ? 0.2 : 0.45 });
+      mesh.add(new THREE.LineSegments(edgesGeo, edgesMat));
+
+      return mesh;
+    }
+
+    function checkCollision(piece, grid, offsetX = 0, offsetY = 0, offsetZ = 0) {
+      for (let coord of piece.coords) {/* Lines 745-751 omitted */}
+      return false;
+    }
+
+    function spawnPiece(pieceData) {
+      const stage = STAGES[currentStageIdx];
+      let pData = pieceData;
+            
+      if (!pData) {/* Lines 760-766 omitted */}
+
+      // Calculate bounding box of coordinates to center piece safely within grid bounds
+      let minX = Infinity, maxX = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+
+      for (let c of pData.coords) {/* Lines 774-780 omitted */}
+
+      let sx = Math.floor((gridX - (maxX - minX + 1)) / 2) - minX;
+      let sz = Math.floor((gridZ - (maxZ - minZ + 1)) / 2) - minZ;
+      let sy = gridY - 1 - maxY;
+
+      const group = new THREE.Group();
+      for (let coord of pData.coords) {/* Lines 788-791 omitted */}
+      scene.add(group);
+
+      return {/* Lines 795-801 omitted */};
+    }
+
+    function updatePieceMeshPosition(piece) {
+      if (!piece || !piece.meshGroup) return;
+      const pos = gridToWorld(piece.x, piece.y, piece.z);
+      piece.meshGroup.position.set(pos.x, pos.y, pos.z);
+    }
+
+    function rotatePiece3D(piece, axis) {
+      if (!piece) return;
+
+      const newCoords = piece.coords.map(c => {
+        /* Lines 814-818 omitted */
+        return [x, y, z];
+      });
+
+      const oldCoords = piece.coords;
+      piece.coords = newCoords;
+
+      if (checkCollision(piece, gridState)) {
+        piece.coords = oldCoords;
+      } else {/* Lines 827-836 omitted */}
+      updateGhostPiece();
+    }
+
+    function updateGhostPiece() {
+      if (!activePiece) return;
+
+      while (ghostMeshGroup.children.length > 0) {/* Lines 844-845 omitted */}
+
+      let ghostY = activePiece.y;
+      while (!checkCollision(activePiece, gridState, 0, ghostY - activePiece.y - 1, 0)) {/* Lines 849-850 omitted */}
+
+      const pos = gridToWorld(activePiece.x, ghostY, activePiece.z);
+      ghostMeshGroup.position.set(pos.x, pos.y, pos.z);
+
+      for (let coord of activePiece.coords) {/* Lines 856-859 omitted */}
+    }
+
+    function lockPiece(piece) {
+      sound.playDrop();
+      for (let coord of piece.coords) {/* Lines 865-877 omitted */}
+
+      scene.remove(piece.meshGroup);
+
+      if (piece.isBomb) {/* Lines 882-883 omitted */}
+
+      checkAndClearLayers();
+
+      // Check if top row is dangerously full to give visual ticker alert
+      let isNearCeiling = false;
+      for (let x = 0; x < gridX; x++) {/* Lines 890-896 omitted */}
+      if (isNearCeiling) {/* Lines 898-899 omitted */}
+
+      // Spawn Next
+      let pool = (currentStageIdx < 3) ? PIECES_BASIC : (STAGES[currentStageIdx].allowBombItems ? PIECES_3D : PIECES_3D.slice(0, PIECES_3D.length - 1));
+      activePiece = spawnPiece(nextPieceData);
+      nextPieceData = pool[Math.floor(Math.random() * pool.length)];
+      renderNextPiecePreview(nextPieceData);
+
+      updatePieceMeshPosition(activePiece);
+      updateGhostPiece();
+
+      if (checkCollision(activePiece, gridState)) {/* Lines 911-912 omitted */}
+    }
+
+    function triggerBombExplosion(cx, cy, cz) {
+      sound.playExplosion();
+      for (let dx = -1; dx <= 1; dx++) {/* Lines 918-929 omitted */}
+      score += 150;
+      updateHUD();
+    }
+
+    function checkAndClearLayers() {
+      let clearedCount = 0;
+
+      for (let y = 0; y < gridY; y++) {/* Lines 938-978 omitted */}
+
+      if (clearedCount > 0) {/* Lines 981-995 omitted */}
+    }
+
+    function triggerWhaleSwimTeaser() {
+      sound.playWhaleSong();
+      document.getElementById('hud-teaser-msg').classList.remove('hidden');
+      whaleMeshGroup.position.set(-45, 10, -25);
+    }
+
+    function moveActivePieceRelative(screenDx, screenDz) {
+      if (!activePiece) return;
+
+      let q = ((Math.round(cameraAngleX / (Math.PI / 2)) % 4) + 4) % 4;
+      let worldDx = 0, worldDz = 0;
+
+      if (q === 0) { worldDx = screenDx; worldDz = screenDz; }
+      else if (q === 1) { worldDx = screenDz; worldDz = -screenDx; }
+      else if (q === 2) { worldDx = -screenDx; worldDz = -screenDz; }
+      else if (q === 3) { worldDx = -screenDz; worldDz = screenDx; }
+
+      if (!checkCollision(activePiece, gridState, worldDx, 0, worldDz)) {/* Lines 1016-1021 omitted */}
+    }
+
+    function stepActivePiece() {
+      if (!activePiece) return;
+
+      /* Lines 1027-1034 omitted */
+    }
+
+    function hardDrop3D() {/* Lines 1037-1044 omitted */}
+
+    function clearAllSceneBlocks() {/* Lines 1047-1073 omitted */}
+
+    function loadStage(stageIdx) {/* Lines 1076-1105 omitted */}
+
+    function startCurrentStage() {/* Lines 1108-1134 omitted */}
+
+    function onStageCleared() {/* Lines 1137-1152 omitted */}
+
+    function onStageFailed(reason = "블록이 천장까지 가득 차서 공간이 부족합니다!") {/* Lines 1155-1171 omitted */}
+
+    function updateHUD() {/* Lines 1174-1185 omitted */}
+
+    function renderStageMapGrid() {/* Lines 1188-1211 omitted */}
+
+    function animate(time = 0) {/* Lines 1214-1244 omitted */}
+
+    // Keyboard Binds
+    window.addEventListener('keydown', e => {
     });
+
+    // Touch Binds
+    document.getElementById('t-left').onclick = () => moveActivePieceRelative(-1, 0);
+    document.getElementById('t-right').onclick = () => moveActivePieceRelative(1, 0);
+    document.getElementById('t-fw').onclick = () => moveActivePieceRelative(0, -1);
+    document.getElementById('t-bw').onclick = () => moveActivePieceRelative(0, 1);
+    document.getElementById('t-down').onclick = () => stepActivePiece();
+    document.getElementById('t-rot-r').onclick = () => rotatePiece3D(activePiece, 'Y');
+    document.getElementById('t-drop').onclick = () => hardDrop3D();
+
+    // Skill Binds
+    document.getElementById('skill-bomb').onclick = () => {/* Lines 1284-1290 omitted */};
+
+    document.getElementById('skill-vortex').onclick = () => {/* Lines 1293-1307 omitted */};
+
+    // UI Modal Flow Control
+    document.getElementById('btn-start-stage').onclick = startCurrentStage;
+    document.getElementById('btn-next-stage').onclick = () => {/* Lines 1312-1313 omitted */};
+    document.getElementById('btn-retry-stage').onclick = () => {/* Lines 1315-1316 omitted */};
+
+    document.getElementById('btn-stages').onclick = () => {/* Lines 1319-1321 omitted */};
+    document.getElementById('btn-close-stages').onclick = () => {/* Lines 1323-1324 omitted */};
+
+    document.getElementById('btn-reset-cam').onclick = () => {/* Lines 1327-1329 omitted */};
+
+    document.getElementById('btn-pause').onclick = () => {/* Lines 1332-1335 omitted */};
+
+    // Bootstrap on Window Load
+    window.onload = function () {/* Lines 1339-1342 omitted */};
+
   </script>
 </body>
 </html>
