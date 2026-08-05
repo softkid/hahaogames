@@ -17,25 +17,36 @@ async function loadGames(){
   }catch(e){console.error(e)}
 }
 
-// Simple particle background
+// Subtle animated background: slow floating shapes (DOM-based) for calm motion
 function startParticles(){
-  const canvas = document.getElementById('particle-bg');
-  const ctx = canvas.getContext('2d');
-  let w=canvas.width=window.innerWidth; let h=canvas.height=window.innerHeight;
-  const particles=[];
-  for(let i=0;i<120;i++) particles.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.8+0.6,dx:(Math.random()-0.5)*0.4,dy:(Math.random()-0.5)*0.4});
-  function frame(){
-    ctx.clearRect(0,0,w,h);
-    particles.forEach(p=>{
-      p.x+=p.dx; p.y+=p.dy;
-      if(p.x<0||p.x>w) p.dx*=-1;
-      if(p.y<0||p.y>h) p.dy*=-1;
-      ctx.beginPath(); ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-    });
-    requestAnimationFrame(frame);
+  const container = document.getElementById('subtle-bg');
+  if(!container) return;
+  // create a small number of soft circles
+  const count = 8;
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.style.position='absolute';
+    el.style.borderRadius='50%';
+    el.style.pointerEvents='none';
+    el.style.width=(120 + Math.random()*260)+'px';
+    el.style.height=el.style.width;
+    el.style.left=(Math.random()*100)+'%';
+    el.style.top=(Math.random()*100)+'%';
+    el.style.background=`radial-gradient(circle at 30% 30%, rgba(16,24,32,0.06), rgba(16,24,32,0.02))`;
+    el.style.transform=`translate(-50%,-50%)`;
+    el.style.opacity='0.6';
+    el.style.transition='transform 18s linear, opacity 8s ease-in-out';
+    container.appendChild(el);
+    // animate position slowly
+    (function loop(node){
+      const nx = (Math.random()*110)-5;
+      const ny = (Math.random()*110)-5;
+      node.style.left = nx + '%';
+      node.style.top = ny + '%';
+      node.style.opacity = (0.35 + Math.random()*0.5).toString();
+      setTimeout(()=>loop(node), 8000 + Math.random()*9000);
+    })(el);
   }
-  frame();
-  window.addEventListener('resize',()=>{w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight});
 }
 
 document.addEventListener('DOMContentLoaded',()=>{loadGames();startParticles();});
