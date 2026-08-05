@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blackjack — HAHAO</title>
+  <style>body{font-family:Inter,Arial,Helvetica,sans-serif;display:flex;align-items:center;justify-content:center;height:100%;margin:0;background:#f3f4f6}.game{width:420px;padding:18px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(16,24,32,0.08)}button{padding:8px 12px;margin:6px}</style>
+</head>
+<body>
+  <div class="game">
+    <h3>Blackjack (Demo)</h3>
+    <div id="status"></div>
+    <div><strong>Player:</strong> <span id="player"></span></div>
+    <div><strong>Dealer:</strong> <span id="dealer"></span></div>
+    <div style="margin-top:12px">
+      <button id="hit">Hit</button>
+      <button id="stand">Stand</button>
+      <button id="deal">Deal</button>
+    </div>
+  </div>
+  <script>
+    const status=document.getElementById('status');const playerEl=document.getElementById('player');const dealerEl=document.getElementById('dealer');
+    function rand(){return Math.floor(Math.random()*13)+1}
+    function val(cards){let s=cards.reduce((a,b)=>a+Math.min(b,10),0);return s}
+    let player=[],dealer=[];
+    document.getElementById('deal').addEventListener('click',()=>{player=[rand(),rand()];dealer=[rand()];render();status.textContent='Game started'});
+    document.getElementById('hit').addEventListener('click',()=>{player.push(rand());if(val(player)>21)status.textContent='Busted';render();});
+    document.getElementById('stand').addEventListener('click',()=>{while(val(dealer)<17)dealer.push(rand());const p=val(player);const d=val(dealer);status.textContent=(p>d&&p<=21)?'You win':(d>p&&d<=21)?'Dealer wins':'Push';render();});
+    function render(){playerEl.textContent=player.join(', ')+' ('+val(player)+')';dealerEl.textContent=dealer.join(', ')+' ('+val(dealer)+')';}
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Snake — HAHAO</title>
+  <style>
+    html,body{height:100%;margin:0;background:#000;display:flex;align-items:center;justify-content:center}
+    canvas{background:#071018;border-radius:12px;display:block}
+    .ui{position:fixed;top:12px;left:12px;color:#fff;font-family:Inter,Arial}
+  </style>
+</head>
+<body>
+  <div class="ui">Use arrow keys to move — Score: <span id="score">0</span></div>
+  <canvas id="c" width="480" height="360"></canvas>
+  <script>
+    const canvas=document.getElementById('c');const ctx=canvas.getContext('2d');
+    const grid=16;let count=0;let snake=[{x:8,y:8}];let dir={x:1,y:0};let apple={x:5,y:5};let score=0;
+    document.getElementById('score').textContent=score;
+    function loop(){
+      requestAnimationFrame(loop);
+      if(++count<6) return; count=0;
+      const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+      if(head.x<0||head.x>=canvas.width/grid||head.y<0||head.y>=canvas.height/grid||snake.some(s=>s.x===head.x&&s.y===head.y)){
+        snake=[{x:8,y:8}];dir={x:1,y:0};score=0;document.getElementById('score').textContent=score;return;
+      }
+      snake.unshift(head);
+      if(head.x===apple.x&&head.y===apple.y){score++;document.getElementById('score').textContent=score;apple={x:Math.floor(Math.random()*(canvas.width/grid)),y:Math.floor(Math.random()*(canvas.height/grid))};}
+      else snake.pop();
+      ctx.fillStyle='#071018';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#0ef';snake.forEach(s=>ctx.fillRect(s.x*grid,s.y*grid,grid-1,grid-1));
+      ctx.fillStyle='#f90';ctx.fillRect(apple.x*grid,apple.y*grid,grid-1,grid-1);
+    }
+    document.addEventListener('keydown',e=>{if(e.key==='ArrowUp'&&dir.y===0)dir={x:0,y:-1};if(e.key==='ArrowDown'&&dir.y===0)dir={x:0,y:1};if(e.key==='ArrowLeft'&&dir.x===0)dir={x:-1,y:0};if(e.key==='ArrowRight'&&dir.x===0)dir={x:1,y:0};});
+    loop();
+  </script>
+</body>
+</html>

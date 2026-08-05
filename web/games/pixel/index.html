@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pixel Adventure — HAHAO</title>
+  <style>html,body{height:100%;margin:0;background:#e9eef5;font-family:Inter,Arial;display:flex;align-items:center;justify-content:center}#game{width:640px;height:360px;background:#fff;border-radius:12px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(16,24,32,0.08)}.player{width:28px;height:28px;background:#111;border-radius:6px;position:absolute;left:50px;top:150px;transition:top .08s,left .08s}</style>
+</head>
+<body>
+  <div id="game">
+    <div id="player" class="player"></div>
+  </div>
+  <script>
+    const p = document.getElementById('player');let x=50,y=150;
+    function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+    document.addEventListener('keydown',e=>{
+      if(e.key==='ArrowUp') y-=16; if(e.key==='ArrowDown') y+=16; if(e.key==='ArrowLeft') x-=16; if(e.key==='ArrowRight') x+=16;
+      x=clamp(x,8,600); y=clamp(y,8,320); p.style.left=x+'px'; p.style.top=y+'px';
+    });
+  </script>
+</body>
+</html>
