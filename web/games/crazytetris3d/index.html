@@ -619,3 +619,1349 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>CRAZY TETRIS 3D - 100 STAGE JOURNEY</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #040408;
+            color: #f4f4f5;
+            touch-action: manipulation;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glassmorphism Panel */
+        .card-panel {
+            background-color: rgba(12, 12, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Touch Control Button Styles */
+        .touch-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.12s ease;
+        }
+        .touch-btn:active {
+            background: rgba(244, 63, 94, 0.35);
+            border-color: rgba(244, 63, 94, 0.7);
+            transform: scale(0.95);
+        }
+
+        /* Custom Scrollbar for Level Select Modal */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 15, 25, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(244, 63, 94, 0.5);
+            border-radius: 3px;
+        }
+
+        /* WebGL Canvas Background Overlay */
+        #webgl-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative overflow-hidden">
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Header Header -->
+    <header class="absolute top-3 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none">
+        <h1 class="text-xl sm:text-3xl font-black font-orbitron tracking-widest uppercase">
+            <span class="text-rose-500">CRAZY</span> <span class="text-cyan-400">TETRIS</span> <span class="text-amber-400">3D</span>
+        </h1>
+        <p id="sub-theme-title" class="text-[11px] sm:text-xs text-cyan-300 mt-0.5 font-semibold tracking-wide">
+            🌌 STAGE 1: 심해의 여정 (4x4 격자 • 기본 입문)
+        </p>
+    </header>
+
+    <!-- Top Left & Right In-Game HUD Panel -->
+    <div class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-3 sm:p-5">
+        
+        <!-- Top Status Bar -->
+        <div class="flex justify-between items-start w-full max-w-6xl mx-auto">
+            
+            <!-- Left Info Panel -->
+            <div class="card-panel p-3 rounded-xl pointer-events-auto space-y-1.5 w-36 sm:w-44">
+                <div>
+                    <div class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">STAGE / MODE</div>
+                    <div id="hud-stage" class="text-base sm:text-xl font-extrabold font-orbitron text-rose-500">STAGE 1</div>
+                </div>
+                <div>
+                    <div class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">GOAL / LINES</div>
+                    <div id="hud-goal" class="text-sm sm:text-base font-bold font-orbitron text-amber-400">0 / 1 줄</div>
+                </div>
+                <div>
+                    <div class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">SCORE</div>
+                    <div id="hud-score" class="text-sm sm:text-base font-bold font-orbitron text-cyan-400">0</div>
+                </div>
+            </div>
+
+            <!-- Center Gravity / Teaser HUD Indicator -->
+            <div id="hud-gravity-box" class="card-panel py-2 px-4 rounded-xl pointer-events-auto text-center border-cyan-500/30">
+                <div class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">3D GRID SIZE</div>
+                <div id="hud-grid-size" class="font-orbitron font-extrabold text-sm sm:text-base text-cyan-400">4 x 4 x 8</div>
+                <div id="hud-teaser-msg" class="text-[10px] text-amber-300 font-semibold mt-1 animate-pulse">
+                    🐋 신비로운 고래가 다가오는 중...
+                </div>
+            </div>
+
+            <!-- Right Systems Button Panel -->
+            <div class="card-panel p-3 rounded-xl pointer-events-auto text-center w-36 sm:w-44 space-y-2">
+                <span class="text-[9px] font-bold text-amber-400 uppercase tracking-widest block">NEXT BLOCK</span>
+                <!-- Next Block Mini Canvas Preview -->
+                <div class="flex flex-col items-center justify-center bg-zinc-950/80 p-1.5 rounded-lg border border-zinc-800">
+                    <canvas id="next-block-canvas" width="80" height="70" class="block"></canvas>
+                    <div id="next-block-label" class="text-[10px] font-orbitron font-bold text-cyan-300 mt-0.5">
+                        --
+                    </div>
+                </div>
+                <div class="flex gap-1.5 pt-1">
+                    <button id="btn-stages" class="flex-1 py-1 bg-rose-600/80 hover:bg-rose-500/80 rounded text-[10px] font-bold text-white">
+                        🗺️ 지도
+                    </button>
+                    <button id="btn-pause" class="flex-1 py-1 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded text-[10px] font-bold text-zinc-200">
+                        ⏸️ 일시정지
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Notification Ticker Banner -->
+    <div class="w-full flex justify-center">
+        <div id="hint-ticker" class="card-panel py-1.5 px-4 rounded-lg text-center text-xs text-amber-300 font-semibold border-amber-500/40">
+            💡 팁: Space(바닥 하드드롭) / ↑↓(깊이 전후진) / ←→(좌우) / R,F,E(3D회전)
+        </div>
+    </div>
+
+    <!-- Bottom Controls & Camera Hint + Skills Panel -->
+    <div class="w-full max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-stretch sm:items-end gap-3 mb-1">
+        
+        <!-- Compact Consolidated Key & Camera Hint Panel -->
+        <div class="card-panel px-3.5 py-2.5 rounded-xl text-[11px] text-zinc-300 pointer-events-auto flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>⚡ 바닥낙하: <b class="text-rose-400 font-bold">Space</b></span>
+            <span class="text-zinc-600">|</span>
+            <span>↔️↕️ 이동: <b class="text-cyan-300 font-bold">화살표(←→↑↓)</b></span>
+            <span class="text-zinc-600">|</span>
+            <span>🔄 3D회전: <b class="text-amber-400 font-bold">R / F / E</b></span>
+            <span class="text-zinc-600">|</span>
+            <span>🖱️ 드래그: <b class="text-zinc-300">뷰 회전</b></span>
+            <span class="text-zinc-600">|</span>
+            <button id="btn-reset-cam" class="text-cyan-400 hover:text-cyan-300 font-bold underline">뷰 리셋</button>
+        </div>
+
+        <!-- Skills Panel -->
+        <div id="skill-panel" class="card-panel p-2.5 rounded-xl pointer-events-auto w-full sm:w-72 space-y-1.5">
+            <div class="text-[10px] font-bold text-rose-400 uppercase tracking-wider flex justify-between">
+                <span>ITEM & SKILL ENERGY</span>
+                <span id="chaos-energy-text" class="text-amber-400 font-orbitron">0%</span>
+            </div>
+
+            <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden border border-zinc-800">
+                <div id="chaos-bar" class="bg-gradient-to-r from-cyan-400 to-amber-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                <button id="skill-bomb" class="py-1.5 bg-zinc-800/70 hover:bg-zinc-700/70 border border-zinc-700/50 rounded text-[11px] font-bold text-zinc-200 disabled:opacity-30 transition">
+                    💣 3D 폭탄 [1]
+                </button>
+                <button id="skill-vortex" class="py-1.5 bg-zinc-800/70 hover:bg-zinc-700/70 border border-zinc-700/50 rounded text-[11px] font-bold text-zinc-200 disabled:opacity-30 transition">
+                    🌌 바닥 소환 [2]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 pointer-events-auto lg:hidden">
+        <div class="flex gap-1.5">
+            <button id="t-fw" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-cyan-300">▲ 전진 (↑)</button>
+        </div>
+        <div class="flex gap-1.5">
+            <button id="t-left" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">◀ 좌 (←)</button>
+            <button id="t-down" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">▼ 하강 (S)</button>
+            <button id="t-right" class="touch-btn px-3.5 py-2 rounded-lg font-bold text-xs text-zinc-200">우 ▶ (→)</button>
+        </div>
+        <div class="flex gap-1.5">
+            <button id="t-bw" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-cyan-300">▼ 후진 (↓)</button>
+            <button id="t-rot-r" class="touch-btn px-3 py-2 rounded-lg font-bold text-xs text-amber-400">🔄 3D 회전</button>
+            <button id="t-drop" class="touch-btn px-4 py-2 rounded-lg font-bold text-xs text-rose-400">⚡ 하드드롭</button>
+        </div>
+    </div>
+
+    
+    <!-- 100 Stage Select Modal -->
+    <div id="modal-stages" class="absolute inset-0 bg-zinc-950/95 backdrop-blur-lg z-40 hidden flex flex-col items-center justify-between p-4 sm:p-6">
+        <div class="text-center mt-2">
+            <h2 class="text-2xl sm:text-4xl font-black font-orbitron text-rose-500 tracking-wider">
+                100 STAGE MAP
+            </h2>
+            <p class="text-xs text-zinc-400 mt-1">단계별로 격자 크기와 깊이가 확장되는 긍정의 성장 여행</p>
+        </div>
+
+        <!-- Scrollable Stage Grid -->
+        <div class="w-full max-w-4xl my-4 overflow-y-auto max-h-[60vh] p-2 grid grid-cols-5 sm:grid-cols-10 gap-2 text-center" id="stage-grid-container">
+            <!-- Stage buttons generated dynamically via JS -->
+        </div>
+
+        <div class="flex gap-3 mb-2">
+            <button id="btn-mode-campaign" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-full font-bold text-xs">
+                🏆 캠페인 모드
+            </button>
+            <button id="btn-mode-infinite" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-full font-bold text-xs">
+                ⚡ 무한 도전 모드
+            </button>
+            <button id="btn-close-stages" class="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-full font-bold text-xs text-zinc-300">
+                닫기 ✖️
+            </button>
+        </div>
+    </div>
+
+    <!-- Level Briefing & Tip Modal Overlay -->
+    <div id="modal-briefing" class="absolute inset-0 bg-zinc-950/90 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center">
+        <div class="card-panel p-6 sm:p-8 rounded-2xl max-w-md w-full space-y-4 text-left border-rose-500/40">
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <span id="brief-stage-title" class="text-lg sm:text-2xl font-black font-orbitron text-rose-500">STAGE 1</span>
+                <span id="brief-theme-tag" class="text-xs px-2.5 py-1 bg-cyan-950 text-cyan-300 border border-cyan-800 rounded-full font-bold">🌊 심해 오디세이</span>
+            </div>
+
+            <div class="space-y-2 text-xs text-zinc-300">
+                <div><b>📐 공간 격자:</b> <span id="brief-grid-spec" class="text-amber-400 font-orbitron">4 x 4 (깊이 8)</span></div>
+                <div><b>🎯 클리어 목표:</b> <span id="brief-goal-text" class="text-cyan-400 font-bold">1줄 지우기</span></div>
+                <div><b>🔓 새로 추가되는 기능:</b> <span id="brief-feature-text" class="text-rose-400">3D 기본 조작 익히기</span></div>
+            </div>
+
+            <div class="bg-zinc-900/90 p-3.5 rounded-xl border border-amber-500/30 text-xs text-amber-200 leading-relaxed">
+                <span class="font-bold text-amber-400 block mb-1">💡 스테이지 가이드 & 팁:</span>
+                <span id="brief-tip-text">3D 공간이 4x4로 아담하여 부담없이 한 층을 다 채울 수 있습니다. 방향키로 위치를 잡고 스페이스바를 누르세요!</span>
+            </div>
+
+            <button id="btn-start-stage" class="w-full py-3.5 bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold rounded-xl text-sm uppercase tracking-wider shadow-lg">
+                STAGE START 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Stage Clear / Defeat Modal -->
+    <div id="modal-result" class="absolute inset-0 bg-zinc-950/95 backdrop-blur-md z-30 hidden flex flex-col items-center justify-center p-6 text-center">
+        <h2 id="result-title" class="text-3xl sm:text-5xl font-black font-orbitron text-amber-400 mb-2">
+            STAGE CLEAR! 🎉
+        </h2>
+        <p id="result-desc" class="text-xs sm:text-sm text-zinc-300 mb-6 leading-relaxed max-w-sm font-medium">
+            축하합니다! 3D 레이어를 성공적으로 완성하였습니다.
+        </p>
+
+        <div class="flex gap-3">
+            <button id="btn-next-stage" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-full text-sm tracking-wider uppercase shadow-lg">
+                NEXT STAGE ➔
+            </button>
+            <button id="btn-retry-stage" class="px-6 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold rounded-full text-sm uppercase">
+                RETRY 🔄
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * CRAZY TETRIS 3D: 100 STAGE JOURNEY - Sound Engine
+         */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playTone(freq, type, duration, vol = 0.08) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e){}
+            }
+
+            playMove() { this.playTone(320, 'sine', 0.05, 0.04); }
+            playRotate() { this.playTone(480, 'triangle', 0.07, 0.05); }
+            playDrop() { this.playTone(180, 'square', 0.1, 0.07); }
+            
+            playExplosion() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(35, this.ctx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                } catch(e){}
+            }
+
+            playWhaleSong() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(440, this.ctx.currentTime + 1.2);
+                    osc.frequency.linearRampToValueAtTime(330, this.ctx.currentTime + 2.0);
+                    gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.12, this.ctx.currentTime + 0.8);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 2.0);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 2.0);
+                } catch(e){}
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        
+        // Background Symbolic Themes Definition
+        const STAGE_THEMES = {
+            OCEAN: { name: '🌊 심해 오디세이', fogColor: 0x051329, bgColor: 0x020813, accentColor: 0x38bdf8 },
+            CYBER: { name: '🏙️ 네온 사이버 시티', fogColor: 0x140728, bgColor: 0x090314, accentColor: 0xa855f7 },
+            COSMOS: { name: '🌌 은하수 우주선', fogColor: 0x070c1e, bgColor: 0x030611, accentColor: 0xf43f5e },
+            INFERNO: { name: '🔥 용암 화산지대', fogColor: 0x210705, bgColor: 0x110302, accentColor: 0xf97316 },
+            QUANTUM: { name: '🔮 퀀텀 아우로라', fogColor: 0x03211e, bgColor: 0x011210, accentColor: 0x10b981 }
+        };
+
+        // Helper to generate 100 Stage Configurations systematically
+        function generate100Stages() {
+            const stages = [];
+            for (let i = 1; i <= 100; i++) {
+                let themeKey = 'OCEAN';
+                if (i > 20) themeKey = 'CYBER';
+                if (i > 40) themeKey = 'COSMOS';
+                if (i > 65) themeKey = 'INFERNO';
+                if (i > 85) themeKey = 'QUANTUM';
+
+                // Grid size progression: Height (gridY) increased for ample headroom!
+                let gridX = 4;
+                let gridY = 12;
+                let gridZ = 4;
+
+                if (i > 10) { gridX = 6; gridZ = 6; gridY = 14; }
+                if (i > 25) { gridX = 8; gridZ = 8; gridY = 16; }
+                if (i > 50) { gridX = 10; gridZ = 10; gridY = 18; }
+                if (i > 80) { gridX = 12; gridZ = 12; gridY = 20; }
+
+                // Goal lines required
+                let targetLines = Math.min(10, Math.floor((i - 1) % 10) + 1);
+                
+                // Allow features
+                let allowRotation3D = true; // 1단계부터 3D 회전 전면 허용!
+                let allowGravityShifts = i >= 15;
+                let allowBombItems = i >= 8;
+
+                // Stage Tip text
+                let tip = "방향키(←/→/↑/↓)로 위치를 잡고, R/F/E 키로 3D 회전한 뒤 스페이스바로 바닥 한 층을 완성하세요!";
+                let featureDesc = "기초 3D 입체 이동 및 회전 연습";
+
+                if (i === 1) tip = "🎉 반가워요! 아주 명확하고 직관적인 기초 블록(1x1 싱글, 2x2 큐브, 일자형)이 등장합니다!";
+                else if (i === 3) { tip = "💡 팁: R(가로), F(세로), E(깊이) 회전을 자유자재로 조합해보세요."; featureDesc = "3D 정밀 회전 활용"; }
+                else if (i === 8) { tip = "💣 팁: 8단계부터 강력한 폭탄 조각이 등장합니다!"; featureDesc = "3D 폭탄 조각 해금"; }
+                else if (i === 11) { tip = "📐 공간이 6x6으로 확장되었습니다! 더 여유롭게 채워보세요."; featureDesc = "6x6 가로세로 확장"; }
+                else if (i === 15) { tip = "🌀 15단계부터 주기적인 3D 중력 전환이 활성화됩니다!"; featureDesc = "3D 중력 변환 활성화"; }
+
+                stages.push({
+                    id: i,
+                    theme: STAGE_THEMES[themeKey],
+                    gridX: gridX,
+                    gridY: gridY,
+                    gridZ: gridZ,
+                    targetLines: targetLines,
+                    allowRotation3D: allowRotation3D,
+                    allowGravityShifts: allowGravityShifts,
+                    allowBombItems: allowBombItems,
+                    dropInterval: Math.max(300, 1000 - i * 6),
+                    tip: tip,
+                    featureDesc: featureDesc
+                });
+            }
+            return stages;
+        }
+
+        const STAGES = generate100Stages();
+
+        // 3D Polyomino Pieces (기초 블록과 복잡한 블록 구분)
+        const PIECES_BASIC = [
+            { name: 'Single 1x1', color: 0x00f0ff, coords: [[0,0,0]] },
+            { name: 'Domino 1x2', color: 0x06b6d4, coords: [[0,0,0],[1,0,0]] },
+            { name: 'Square 2x2', color: 0xeab308, coords: [[0,0,0],[1,0,0],[0,0,1],[1,0,1]] },
+            { name: 'I-Bar 1x3', color: 0x10b981, coords: [[0,0,0],[1,0,0],[-1,0,0]] },
+            { name: 'I-Bar 1x4', color: 0x3b82f6, coords: [[0,0,0],[1,0,0],[2,0,0],[-1,0,0]] },
+            { name: 'L-Flat', color: 0xf97316, coords: [[0,0,0],[1,0,0],[0,0,1]] }
+        ];
+
+        const PIECES_ADVANCED = [
+            { name: 'Cube 2x2x2', color: 0xca8a04, coords: [[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]] },
+            { name: 'Corner 3D', color: 0xa855f7, coords: [[0,0,0],[1,0,0],[0,1,0],[0,0,1]] },
+            { name: 'L-Shape 3D', color: 0xf59e0b, coords: [[0,0,0],[0,1,0],[0,2,0],[1,0,0]] },
+            { name: 'T-Shape 3D', color: 0x6366f1, coords: [[0,0,0],[-1,0,0],[1,0,0],[0,1,0]] },
+            { name: 'S-Shape 3D', color: 0x10b981, coords: [[0,0,0],[1,0,0],[0,1,0],[-1,1,0]] },
+            { name: 'Bomb 3D', color: 0xef4444, isBomb: true, coords: [[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]] }
+        ];
+
+        const PIECES_3D = [...PIECES_BASIC, ...PIECES_ADVANCED];
+
+        let scene, camera, renderer;
+        let containerMesh, floorGridMesh;
+        let activePiece = null, nextPieceData = null;
+        let ghostMeshGroup = null;
+        let particleSystem = [];
+        let backgroundParticles = null;
+        let whaleMeshGroup = null;
+
+        // Current Stage & Game State
+        let currentStageIdx = 0; // 0 = Stage 1
+        let unlockedMaxStage = 1; // Highest stage unlocked
+        let isInfiniteMode = false;
+
+        let gridX = 4, gridY = 8, gridZ = 4;
+        let gridState = [];
+        let score = 0, linesCleared = 0;
+        let chaosEnergy = 0;
+        let gameRunning = false, isPaused = false;
+        let dropInterval = 1000, dropCounter = 0, lastTime = 0;
+
+        // Render 2D Isometric Mini Preview for NEXT BLOCK
+        function renderNextPiecePreview(pData) {
+            const canvasEl = document.getElementById('next-block-canvas');
+            if (!canvasEl) return;
+            const ctx = canvasEl.getContext('2d');
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+            if (!pData) return;
+
+            const coords = pData.coords;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+            const isoCoords = coords.map(([x, y, z]) => {
+                const px = (x - z) * 11;
+                const py = (x + z) * 5.5 - y * 10;
+                return { px, py, x, y, z };
+            });
+
+            isoCoords.forEach(c => {
+                if (c.px < minX) minX = c.px;
+                if (c.px > maxX) maxX = c.px;
+                if (c.py < minY) minY = c.py;
+                if (c.py > maxY) maxY = c.py;
+            });
+
+            const centerX = canvasEl.width / 2 - (minX + maxX) / 2;
+            const centerY = canvasEl.height / 2 - (minY + maxY) / 2;
+
+            // Depth sorting for isometric drawing
+            isoCoords.sort((a, b) => (a.x + a.z - a.y) - (b.x + b.z - b.y));
+
+            const hexColor = '#' + pData.color.toString(16).padStart(6, '0');
+
+            isoCoords.forEach(c => {
+                const sx = centerX + c.px;
+                const sy = centerY + c.py;
+                const w = 11, h = 11;
+
+                ctx.fillStyle = hexColor;
+                ctx.fillRect(sx - w/2, sy - h/2, w, h);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(sx - w/2, sy - h/2, w, h);
+            });
+
+            const label = document.getElementById('next-block-label');
+            if (label) label.innerText = pData.name;
+        }
+
+        // Camera Drag Controls
+        let isDragging = false, previousMousePosition = { x: 0, y: 0 };
+        let cameraAngleX = 0, cameraAngleY = Math.PI / 6, cameraDistance = 20;
+
+        function init3DScene() {
+            const canvasEl = document.getElementById('webgl-canvas');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x051329, 0.02);
+
+            camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 1000);
+            updateCameraPosition();
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Enable Directional Shadow Mapping for realistic block shadows
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Ambient & Directional Shadow Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+            dirLight.position.set(15, 30, 20);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 80;
+            dirLight.shadow.camera.left = -15;
+            dirLight.shadow.camera.right = 15;
+            dirLight.shadow.camera.top = 15;
+            dirLight.shadow.camera.bottom = -15;
+            dirLight.shadow.bias = -0.0005;
+            scene.add(dirLight);
+
+            // Secondary Fill Light for depth
+            const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.35);
+            fillLight.position.set(-20, 10, -15);
+            scene.add(fillLight);
+
+            // Ghost Piece Group
+            ghostMeshGroup = new THREE.Group();
+            scene.add(ghostMeshGroup);
+
+            // Background Atmospheric Stars/Bubbles
+            createBackgroundParticleSystem();
+
+            // Create Majestic 3D Whale Mesh
+            create3DWhaleMesh();
+
+            // Mouse Camera Orbit Handling
+            canvasEl.addEventListener('mousedown', e => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                cameraAngleX -= deltaX * 0.008;
+                cameraAngleY = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraAngleY + deltaY * 0.008));
+
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+                updateCameraPosition();
+            });
+
+            window.addEventListener('mouseup', () => isDragging = false);
+
+            canvasEl.addEventListener('wheel', e => {
+                cameraDistance = Math.max(10, Math.min(55, cameraDistance + e.deltaY * 0.025));
+                updateCameraPosition();
+            });
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createBackgroundParticleSystem() {
+            if (backgroundParticles) scene.remove(backgroundParticles);
+
+            const particleCount = 200;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 80;
+                positions[i + 1] = (Math.random() - 0.5) * 80;
+                positions[i + 2] = (Math.random() - 0.5) * 80;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const material = new THREE.PointsMaterial({
+                color: 0x38bdf8,
+                size: 0.4,
+                transparent: true,
+                opacity: 0.6
+            });
+
+            backgroundParticles = new THREE.Points(geometry, material);
+            scene.add(backgroundParticles);
+        }
+
+        // Creates a Majestic Low-Poly Glowing Whale that swims gracefully in the background
+        function create3DWhaleMesh() {
+            whaleMeshGroup = new THREE.Group();
+
+            // Whale Body
+            const bodyGeo = new THREE.ConeGeometry(1.5, 6, 8);
+            bodyGeo.rotateX(Math.PI / 2);
+            const bodyMat = new THREE.MeshStandardMaterial({
+                color: 0x38bdf8,
+                roughness: 0.3,
+                wireframe: true,
+                emissive: 0x0284c7,
+                emissiveIntensity: 0.8
+            });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.castShadow = true;
+            whaleMeshGroup.add(body);
+
+            // Tail
+            const tailGeo = new THREE.BoxGeometry(2.5, 0.2, 1.2);
+            const tail = new THREE.Mesh(tailGeo, bodyMat);
+            tail.position.set(0, 0, -3.2);
+            tail.castShadow = true;
+            whaleMeshGroup.add(tail);
+
+            // Flippers
+            const flipperGeo = new THREE.BoxGeometry(3.5, 0.15, 1.0);
+            const flippers = new THREE.Mesh(flipperGeo, bodyMat);
+            flippers.position.set(0, 0, 0.8);
+            flippers.castShadow = true;
+            whaleMeshGroup.add(flippers);
+
+            whaleMeshGroup.position.set(-35, 12, -20);
+            scene.add(whaleMeshGroup);
+        }
+
+        function buildGridContainer(gx, gy, gz, accentColor = 0x38bdf8) {
+            if (containerMesh) scene.remove(containerMesh);
+
+            containerMesh = new THREE.Group();
+
+            // Cage Wireframe
+            const boxGeo = new THREE.BoxGeometry(gx, gy, gz);
+            const edgeGeo = new THREE.EdgesGeometry(boxGeo);
+            const edgeMat = new THREE.LineBasicMaterial({ color: accentColor, linewidth: 2, transparent: true, opacity: 0.5 });
+            const wireframe = new THREE.LineSegments(edgeGeo, edgeMat);
+            containerMesh.add(wireframe);
+
+            // Floor Grid Subdivision
+            floorGridMesh = new THREE.GridHelper(Math.max(gx, gz), Math.max(gx, gz), accentColor, 0x334155);
+            floorGridMesh.position.y = -gy / 2;
+            containerMesh.add(floorGridMesh);
+
+            // Translucent Glass Floor that receives realistic shadows
+            const floorGeo = new THREE.PlaneGeometry(gx, gz);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x0f172a,
+                transparent: true,
+                opacity: 0.75,
+                roughness: 0.4,
+                metalness: 0.1,
+                side: THREE.DoubleSide
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = Math.PI / 2;
+            floor.position.y = -gy / 2 - 0.01;
+            floor.receiveShadow = true;
+            containerMesh.add(floor);
+
+            scene.add(containerMesh);
+        }
+
+        function create3DGridArray(gx, gy, gz) {
+            const arr = new Array(gx);
+            for (let x = 0; x < gx; x++) {
+                arr[x] = new Array(gy);
+                for (let y = 0; y < gy; y++) {
+                    arr[x][y] = new Array(gz).fill(null);
+                }
+            }
+            return arr;
+        }
+
+        function gridToWorld(x, y, z) {
+            return {
+                x: x - (gridX - 1) / 2,
+                y: y - (gridY - 1) / 2,
+                z: z - (gridZ - 1) / 2
+            };
+        }
+
+        function updateCameraPosition() {
+            camera.position.x = cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
+            camera.position.y = cameraDistance * Math.sin(cameraAngleY);
+            camera.position.z = cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function createBlockMesh(colorHex, isGhost = false, isBomb = false) {
+            const geo = new THREE.BoxGeometry(0.96, 0.96, 0.96);
+            let mat;
+
+            if (isGhost) {
+                mat = new THREE.MeshBasicMaterial({ color: colorHex, wireframe: true, transparent: true, opacity: 0.35 });
+            } else {
+                mat = new THREE.MeshStandardMaterial({
+                    color: colorHex,
+                    roughness: 0.2,
+                    metalness: 0.15,
+                    emissive: isBomb ? 0xd97706 : 0x000000,
+                    emissiveIntensity: 0.4
+                });
+            }
+
+            const mesh = new THREE.Mesh(geo, mat);
+            if (!isGhost) {
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+            }
+
+            const edgesGeo = new THREE.EdgesGeometry(geo);
+            const edgesMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: isGhost ? 0.2 : 0.45 });
+            mesh.add(new THREE.LineSegments(edgesGeo, edgesMat));
+
+            return mesh;
+        }
+
+        function checkCollision(piece, grid, offsetX = 0, offsetY = 0, offsetZ = 0) {
+            for (let coord of piece.coords) {
+                let gx = piece.x + coord[0] + offsetX;
+                let gy = piece.y + coord[1] + offsetY;
+                let gz = piece.z + coord[2] + offsetZ;
+
+                if (gx < 0 || gx >= gridX || gy < 0 || gy >= gridY || gz < 0 || gz >= gridZ) return true;
+                if (grid[gx][gy][gz] !== null) return true;
+            }
+            return false;
+        }
+
+        function spawnPiece(pieceData) {
+            const stage = STAGES[currentStageIdx];
+            let pData = pieceData;
+            
+            if (!pData) {
+                // 초반 난이도(1~4단계)는 한 면을 맞추기 쉬운 기초 블록(PIECES_BASIC)만 등장!
+                let pool = PIECES_BASIC;
+                if (currentStageIdx >= 3) {
+                    pool = stage.allowBombItems ? PIECES_3D : PIECES_3D.slice(0, PIECES_3D.length - 1);
+                }
+                pData = pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            // Calculate bounding box of coordinates to center piece safely within grid bounds
+            let minX = Infinity, maxX = -Infinity;
+            let minZ = Infinity, maxZ = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+
+            for (let c of pData.coords) {
+                if (c[0] < minX) minX = c[0];
+                if (c[0] > maxX) maxX = c[0];
+                if (c[2] < minZ) minZ = c[2];
+                if (c[2] > maxZ) maxZ = c[2];
+                if (c[1] < minY) minY = c[1];
+                if (c[1] > maxY) maxY = c[1];
+            }
+
+            let sx = Math.floor((gridX - (maxX - minX + 1)) / 2) - minX;
+            let sz = Math.floor((gridZ - (maxZ - minZ + 1)) / 2) - minZ;
+            let sy = gridY - 1 - maxY;
+
+            const group = new THREE.Group();
+            for (let coord of pData.coords) {
+                const mesh = createBlockMesh(pData.color, false, pData.isBomb);
+                mesh.position.set(coord[0], coord[1], coord[2]);
+                group.add(mesh);
+            }
+            scene.add(group);
+
+            return {
+                data: pData,
+                coords: pData.coords.map(c => [...c]),
+                color: pData.color,
+                isBomb: pData.isBomb || false,
+                x: sx, y: sy, z: sz,
+                meshGroup: group
+            };
+        }
+
+        function updatePieceMeshPosition(piece) {
+            if (!piece || !piece.meshGroup) return;
+            const pos = gridToWorld(piece.x, piece.y, piece.z);
+            piece.meshGroup.position.set(pos.x, pos.y, pos.z);
+        }
+
+        function rotatePiece3D(piece, axis) {
+            if (!piece) return;
+
+            const newCoords = piece.coords.map(c => {
+                let [x, y, z] = c;
+                if (axis === 'X') return [x, -z, y];
+                if (axis === 'Y') return [z, y, -x];
+                if (axis === 'Z') return [-y, x, z];
+                return [x, y, z];
+            });
+
+            const oldCoords = piece.coords;
+            piece.coords = newCoords;
+
+            if (checkCollision(piece, gridState)) {
+                piece.coords = oldCoords;
+            } else {
+                sound.playRotate();
+                while (piece.meshGroup.children.length > 0) {
+                    piece.meshGroup.remove(piece.meshGroup.children[0]);
+                }
+                for (let coord of piece.coords) {
+                    const mesh = createBlockMesh(piece.color, false, piece.isBomb);
+                    mesh.position.set(coord[0], coord[1], coord[2]);
+                    piece.meshGroup.add(mesh);
+                }
+            }
+            updateGhostPiece();
+        }
+
+        function updateGhostPiece() {
+            if (!activePiece) return;
+
+            while (ghostMeshGroup.children.length > 0) {
+                ghostMeshGroup.remove(ghostMeshGroup.children[0]);
+            }
+
+            let ghostY = activePiece.y;
+            while (!checkCollision(activePiece, gridState, 0, ghostY - activePiece.y - 1, 0)) {
+                ghostY--;
+            }
+
+            const pos = gridToWorld(activePiece.x, ghostY, activePiece.z);
+            ghostMeshGroup.position.set(pos.x, pos.y, pos.z);
+
+            for (let coord of activePiece.coords) {
+                const mesh = createBlockMesh(activePiece.color, true);
+                mesh.position.set(coord[0], coord[1], coord[2]);
+                ghostMeshGroup.add(mesh);
+            }
+        }
+
+        function lockPiece(piece) {
+            sound.playDrop();
+            for (let coord of piece.coords) {
+                let gx = piece.x + coord[0];
+                let gy = piece.y + coord[1];
+                let gz = piece.z + coord[2];
+
+                if (gx >= 0 && gx < gridX && gy >= 0 && gy < gridY && gz >= 0 && gz < gridZ) {
+                    const mesh = createBlockMesh(piece.color, false, piece.isBomb);
+                    const pos = gridToWorld(gx, gy, gz);
+                    mesh.position.set(pos.x, pos.y, pos.z);
+                    scene.add(mesh);
+
+                    gridState[gx][gy][gz] = { color: piece.color, mesh: mesh };
+                }
+            }
+
+            scene.remove(piece.meshGroup);
+
+            if (piece.isBomb) {
+                triggerBombExplosion(piece.x, piece.y, piece.z);
+            }
+
+            checkAndClearLayers();
+
+            // Check if top row is dangerously full to give visual ticker alert
+            let isNearCeiling = false;
+            for (let x = 0; x < gridX; x++) {
+                for (let z = 0; z < gridZ; z++) {
+                    if (gridState[x][gridY - 2][z] !== null) {
+                        isNearCeiling = true;
+                        break;
+                    }
+                }
+            }
+            if (isNearCeiling) {
+                document.getElementById('hint-ticker').innerText = "⚠️ 경고: 블록이 천장 높이까지 높게 쌓였습니다! 바닥 한 층을 완성해 지우세요!";
+            }
+
+            // Spawn Next
+            let pool = (currentStageIdx < 3) ? PIECES_BASIC : (STAGES[currentStageIdx].allowBombItems ? PIECES_3D : PIECES_3D.slice(0, PIECES_3D.length - 1));
+            activePiece = spawnPiece(nextPieceData);
+            nextPieceData = pool[Math.floor(Math.random() * pool.length)];
+            renderNextPiecePreview(nextPieceData);
+
+            updatePieceMeshPosition(activePiece);
+            updateGhostPiece();
+
+            if (checkCollision(activePiece, gridState)) {
+                onStageFailed("블록이 천장(높이 한계)까지 가득 차서 더 이상 새 블록이 들어올 공간이 없습니다!");
+            }
+        }
+
+        function triggerBombExplosion(cx, cy, cz) {
+            sound.playExplosion();
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dz = -1; dz <= 1; dz++) {
+                        let gx = cx + dx, gy = cy + dy, gz = cz + dz;
+                        if (gx >= 0 && gx < gridX && gy >= 0 && gy < gridY && gz >= 0 && gz < gridZ) {
+                            if (gridState[gx][gy][gz]) {
+                                scene.remove(gridState[gx][gy][gz].mesh);
+                                gridState[gx][gy][gz] = null;
+                            }
+                        }
+                    }
+                }
+            }
+            score += 150;
+            updateHUD();
+        }
+
+        function checkAndClearLayers() {
+            let clearedCount = 0;
+
+            for (let y = 0; y < gridY; y++) {
+                let fullPlane = true;
+                for (let x = 0; x < gridX; x++) {
+                    for (let z = 0; z < gridZ; z++) {
+                        if (gridState[x][y][z] === null) {
+                            fullPlane = false;
+                            break;
+                        }
+                    }
+                    if (!fullPlane) break;
+                }
+
+                if (fullPlane) {
+                    clearedCount++;
+                    sound.playExplosion();
+
+                    // Explode Plane Block Meshes
+                    for (let x = 0; x < gridX; x++) {
+                        for (let z = 0; z < gridZ; z++) {
+                            if (gridState[x][y][z]) {
+                                scene.remove(gridState[x][y][z].mesh);
+                                gridState[x][y][z] = null;
+                            }
+                        }
+                    }
+
+                    // Shift Above Layers Down
+                    for (let shiftY = y; shiftY < gridY - 1; shiftY++) {
+                        for (let x = 0; x < gridX; x++) {
+                            for (let z = 0; z < gridZ; z++) {
+                                gridState[x][shiftY][z] = gridState[x][shiftY + 1][z];
+                                if (gridState[x][shiftY][z]) {
+                                    const pos = gridToWorld(x, shiftY, z);
+                                    gridState[x][shiftY][z].mesh.position.set(pos.x, pos.y, pos.z);
+                                }
+                                gridState[x][shiftY + 1][z] = null;
+                            }
+                        }
+                    }
+                    y--;
+                }
+            }
+
+            if (clearedCount > 0) {
+                linesCleared += clearedCount;
+                score += clearedCount * 200;
+                chaosEnergy = Math.min(100, chaosEnergy + clearedCount * 25);
+
+                // Teaser Trigger: Whale swims when player achieves great progress
+                triggerWhaleSwimTeaser();
+
+                updateHUD();
+
+                // Campaign Mode Check Victory
+                const stage = STAGES[currentStageIdx];
+                if (!isInfiniteMode && linesCleared >= stage.targetLines) {
+                    onStageCleared();
+                }
+            }
+        }
+
+        function triggerWhaleSwimTeaser() {
+            sound.playWhaleSong();
+            document.getElementById('hud-teaser-msg').classList.remove('hidden');
+            whaleMeshGroup.position.set(-45, 10, -25);
+        }
+
+        function moveActivePieceRelative(screenDx, screenDz) {
+            if (!activePiece) return;
+
+            let q = ((Math.round(cameraAngleX / (Math.PI / 2)) % 4) + 4) % 4;
+            let worldDx = 0, worldDz = 0;
+
+            if (q === 0) { worldDx = screenDx; worldDz = screenDz; }
+            else if (q === 1) { worldDx = screenDz; worldDz = -screenDx; }
+            else if (q === 2) { worldDx = -screenDx; worldDz = -screenDz; }
+            else if (q === 3) { worldDx = -screenDz; worldDz = screenDx; }
+
+            if (!checkCollision(activePiece, gridState, worldDx, 0, worldDz)) {
+                activePiece.x += worldDx;
+                activePiece.z += worldDz;
+                updatePieceMeshPosition(activePiece);
+                updateGhostPiece();
+                sound.playMove();
+            }
+        }
+
+        function stepActivePiece() {
+            if (!activePiece) return;
+
+            if (checkCollision(activePiece, gridState, 0, -1, 0)) {
+                lockPiece(activePiece);
+            } else {
+                activePiece.y -= 1;
+                updatePieceMeshPosition(activePiece);
+                updateGhostPiece();
+            }
+        }
+
+        function hardDrop3D() {
+            if (!activePiece) return;
+            while (!checkCollision(activePiece, gridState, 0, -1, 0)) {
+                activePiece.y -= 1;
+                score += 2;
+            }
+            updatePieceMeshPosition(activePiece);
+            lockPiece(activePiece);
+        }
+
+        function clearAllSceneBlocks() {
+            if (gridState) {
+                for (let x = 0; x < gridState.length; x++) {
+                    if (!gridState[x]) continue;
+                    for (let y = 0; y < gridState[x].length; y++) {
+                        if (!gridState[x][y]) continue;
+                        for (let z = 0; z < gridState[x][y].length; z++) {
+                            if (gridState[x][y][z] && gridState[x][y][z].mesh) {
+                                scene.remove(gridState[x][y][z].mesh);
+                                if (gridState[x][y][z].mesh.geometry) {
+                                    gridState[x][y][z].mesh.geometry.dispose();
+                                }
+                                gridState[x][y][z] = null;
+                            }
+                        }
+                    }
+                }
+            }
+            if (activePiece && activePiece.meshGroup) {
+                scene.remove(activePiece.meshGroup);
+                activePiece = null;
+            }
+            if (ghostMeshGroup) {
+                while (ghostMeshGroup.children.length > 0) {
+                    ghostMeshGroup.remove(ghostMeshGroup.children[0]);
+                }
+            }
+        }
+
+        function loadStage(stageIdx) {
+            currentStageIdx = stageIdx;
+            const stage = STAGES[currentStageIdx];
+
+            gridX = stage.gridX;
+            gridY = stage.gridY;
+            gridZ = stage.gridZ;
+            dropInterval = stage.dropInterval;
+
+            // Clear any existing blocks from scene first
+            clearAllSceneBlocks();
+
+            // Update Theme Colors & Fog
+            scene.fog.color.setHex(stage.theme.fogColor);
+            scene.background = new THREE.Color(stage.theme.bgColor);
+
+            // Rebuild Cage & Grid
+            buildGridContainer(gridX, gridY, gridZ, stage.theme.accentColor);
+            gridState = create3DGridArray(gridX, gridY, gridZ);
+
+            // Open Briefing Modal
+            document.getElementById('brief-stage-title').innerText = `STAGE ${stage.id}`;
+            document.getElementById('brief-theme-tag').innerText = stage.theme.name;
+            document.getElementById('brief-grid-spec').innerText = `${gridX} x ${gridZ} (깊이 ${gridY})`;
+            document.getElementById('brief-goal-text').innerText = `${stage.targetLines}줄 지우기`;
+            document.getElementById('brief-feature-text').innerText = stage.featureDesc;
+            document.getElementById('brief-tip-text').innerText = stage.tip;
+
+            document.getElementById('modal-briefing').classList.remove('hidden');
+            document.getElementById('modal-result').classList.add('hidden');
+        }
+
+        function startCurrentStage() {
+            sound.init();
+
+            // Clear Scene Blocks cleanly
+            clearAllSceneBlocks();
+
+            score = 0;
+            linesCleared = 0;
+            chaosEnergy = 20;
+            gameRunning = true;
+            isPaused = false;
+            dropCounter = 0;
+
+            const stage = STAGES[currentStageIdx];
+            let pool = (currentStageIdx < 3) ? PIECES_BASIC : (stage.allowBombItems ? PIECES_3D : PIECES_3D.slice(0, PIECES_3D.length - 1));
+            nextPieceData = pool[Math.floor(Math.random() * pool.length)];
+            renderNextPiecePreview(nextPieceData);
+
+            activePiece = spawnPiece();
+            updatePieceMeshPosition(activePiece);
+            updateGhostPiece();
+
+            document.getElementById('modal-briefing').classList.add('hidden');
+            document.getElementById('hint-ticker').innerText = `💡 팁: ${stage.tip}`;
+            
+            updateHUD();
+            lastTime = performance.now();
+        }
+
+        function onStageCleared() {
+            gameRunning = false;
+            sound.playWhaleSong();
+
+            if (currentStageIdx + 1 > unlockedMaxStage) {
+                unlockedMaxStage = Math.min(100, currentStageIdx + 2);
+            }
+
+            document.getElementById('result-title').innerText = "STAGE CLEAR! 🎉";
+            document.getElementById('result-title').className = "text-3xl sm:text-5xl font-black font-orbitron text-amber-400 mb-2";
+            document.getElementById('result-desc').innerHTML = `
+                성공적으로 레이어를 완성하셨습니다!<br>
+                <span class="text-cyan-400 font-bold">SCORE: ${score}</span>
+            `;
+            document.getElementById('btn-next-stage').classList.remove('hidden');
+            document.getElementById('modal-result').classList.remove('hidden');
+        }
+
+        function onStageFailed(reason = "블록이 천장까지 가득 차서 공간이 부족합니다!") {
+            gameRunning = false;
+            sound.playExplosion();
+
+            document.getElementById('result-title').innerText = "STAGE FAILED 😅";
+            document.getElementById('result-title').className = "text-3xl sm:text-5xl font-black font-orbitron text-rose-500 mb-2";
+            document.getElementById('result-desc').innerHTML = `
+                <div class="bg-rose-950/80 border border-rose-500/50 p-2.5 rounded-lg mb-3 text-left">
+                    <span class="text-rose-400 font-bold block text-xs mb-0.5">❌ 실패 원인:</span>
+                    <span class="text-zinc-200 text-xs font-semibold block">${reason}</span>
+                </div>
+                💡 <b>팁:</b> 동일한 위치에 블록을 높게 쌓으면 천장에 걸려 실패합니다.<br>
+                <b>Space 키</b>로 바닥에 즉시 내리고, <b>←/→/↑/↓</b> 키로 넓게 분포시켜 바닥 한 면을 가득 채우세요!<br>
+                <span class="text-cyan-400 font-bold block mt-2 font-orbitron">SCORE: ${score}</span>
+            `;
+            document.getElementById('btn-next-stage').classList.add('hidden');
+            document.getElementById('modal-result').classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            const stage = STAGES[currentStageIdx];
+            document.getElementById('hud-stage').innerText = isInfiniteMode ? "INFINITE" : `STAGE ${stage.id}`;
+            document.getElementById('hud-goal').innerText = isInfiniteMode ? `${linesCleared} 줄` : `${linesCleared} / ${stage.targetLines} 줄`;
+            document.getElementById('hud-score').innerText = score.toLocaleString();
+            document.getElementById('hud-grid-size').innerText = `${gridX} x ${gridZ} x ${gridY}`;
+            document.getElementById('sub-theme-title').innerText = `${stage.theme.name} (${gridX}x${gridZ} 격자)`;
+            document.getElementById('chaos-energy-text').innerText = `${Math.floor(chaosEnergy)}%`;
+            document.getElementById('chaos-bar').style.width = `${chaosEnergy}%`;
+
+            document.getElementById('skill-bomb').disabled = chaosEnergy < 40;
+            document.getElementById('skill-vortex').disabled = chaosEnergy < 70;
+        }
+
+        function renderStageMapGrid() {
+            const container = document.getElementById('stage-grid-container');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= 100; i++) {
+                const btn = document.createElement('button');
+                const isUnlocked = i <= unlockedMaxStage;
+
+                btn.className = `p-3 rounded-xl font-orbitron font-extrabold text-xs transition ${
+                    isUnlocked 
+                        ? 'bg-rose-600/80 hover:bg-rose-500 text-white shadow-md border border-rose-400/50' 
+                        : 'bg-zinc-900/60 text-zinc-600 cursor-not-allowed border border-zinc-800'
+                }`;
+                btn.innerText = i;
+
+                if (isUnlocked) {
+                    btn.onclick = () => {
+                        loadStage(i - 1);
+                        document.getElementById('modal-stages').classList.add('hidden');
+                    };
+                }
+
+                container.appendChild(btn);
+            }
+        }
+
+        function animate(time = 0) {
+            requestAnimationFrame(animate);
+
+            // Animate Background Particles
+            if (backgroundParticles) {
+                backgroundParticles.rotation.y += 0.0005;
+            }
+
+            // Animate Majestic Swimming Whale
+            if (whaleMeshGroup) {
+                whaleMeshGroup.position.x += 0.08;
+                whaleMeshGroup.position.y += Math.sin(time * 0.002) * 0.02;
+                whaleMeshGroup.children[1].rotation.y = Math.sin(time * 0.005) * 0.3; // tail swing
+
+                if (whaleMeshGroup.position.x > 45) {
+                    whaleMeshGroup.position.x = -45; // loop back
+                }
+            }
+
+            if (gameRunning && !isPaused) {
+                const deltaTime = time - lastTime;
+                lastTime = time;
+
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) {
+                    stepActivePiece();
+                    dropCounter = 0;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Keyboard Binds
+        window.addEventListener('keydown', e => {
+            if (!gameRunning || isPaused) return;
+
+            const code = e.code;
+            const key = e.key.toLowerCase();
+
+            // 한글 키보드(한영키) 입력 상태에서도 100% 동작하도록 보정
+            if (code === 'KeyA' || code === 'ArrowLeft' || key === 'a' || key === 'ㅁ') {
+                e.preventDefault(); moveActivePieceRelative(-1, 0);
+            } else if (code === 'KeyD' || code === 'ArrowRight' || key === 'd' || key === 'ㅇ') {
+                e.preventDefault(); moveActivePieceRelative(1, 0);
+            } else if (code === 'KeyW' || code === 'ArrowUp' || key === 'w' || key === 'ㅈ') {
+                e.preventDefault(); moveActivePieceRelative(0, -1);
+            } else if (code === 'KeyS' || code === 'ArrowDown' || key === 's' || key === 'ㄴ') {
+                e.preventDefault(); moveActivePieceRelative(0, 1);
+            } else if (code === 'KeyR' || key === 'r' || key === 'ㄱ') {
+                e.preventDefault(); rotatePiece3D(activePiece, 'Y');
+            } else if (code === 'KeyF' || key === 'f' || key === 'ㄹ') {
+                e.preventDefault(); rotatePiece3D(activePiece, 'X');
+            } else if (code === 'KeyE' || key === 'e' || key === 'ㄷ') {
+                e.preventDefault(); rotatePiece3D(activePiece, 'Z');
+            } else if (code === 'Space') {
+                e.preventDefault(); hardDrop3D();
+            }
+        });
+
+        // Touch Binds
+        document.getElementById('t-left').onclick = () => moveActivePieceRelative(-1, 0);
+        document.getElementById('t-right').onclick = () => moveActivePieceRelative(1, 0);
+        document.getElementById('t-fw').onclick = () => moveActivePieceRelative(0, -1);
+        document.getElementById('t-bw').onclick = () => moveActivePieceRelative(0, 1);
+        document.getElementById('t-down').onclick = () => stepActivePiece();
+        document.getElementById('t-rot-r').onclick = () => rotatePiece3D(activePiece, 'Y');
+        document.getElementById('t-drop').onclick = () => hardDrop3D();
+
+        // Skill Binds
+        document.getElementById('skill-bomb').onclick = () => {
+            if (chaosEnergy >= 40) {
+                chaosEnergy -= 40;
+                nextPieceData = PIECES_3D.find(p => p.isBomb);
+                renderNextPiecePreview(nextPieceData);
+                updateHUD();
+            }
+        };
+
+        document.getElementById('skill-vortex').onclick = () => {
+            if (chaosEnergy >= 70) {
+                chaosEnergy -= 70;
+                sound.playExplosion();
+                // Clear bottom layer
+                for (let x = 0; x < gridX; x++) {
+                    for (let z = 0; z < gridZ; z++) {
+                        if (gridState[x][0][z]) {
+                            scene.remove(gridState[x][0][z].mesh);
+                            gridState[x][0][z] = null;
+                        }
+                    }
+                }
+                updateHUD();
+            }
+        };
+
+        // UI Modal Flow Control
+        document.getElementById('btn-start-stage').onclick = startCurrentStage;
+        document.getElementById('btn-next-stage').onclick = () => {
+            loadStage(Math.min(99, currentStageIdx + 1));
+        };
+        document.getElementById('btn-retry-stage').onclick = () => {
+            loadStage(currentStageIdx);
+        };
+
+        document.getElementById('btn-stages').onclick = () => {
+            renderStageMapGrid();
+            document.getElementById('modal-stages').classList.remove('hidden');
+        };
+        document.getElementById('btn-close-stages').onclick = () => {
+            document.getElementById('modal-stages').classList.add('hidden');
+        };
+
+        document.getElementById('btn-reset-cam').onclick = () => {
+            cameraAngleX = 0; cameraAngleY = Math.PI / 6; cameraDistance = 25;
+            updateCameraPosition();
+        };
+
+        document.getElementById('btn-pause').onclick = () => {
+            if (!gameRunning) return;
+            isPaused = !isPaused;
+            document.getElementById('btn-pause').innerText = isPaused ? "▶️ 계속하기" : "⏸️ 일시정지";
+        };
+
+        // Bootstrap on Window Load
+        window.onload = function () {
+            init3DScene();
+            loadStage(0); // Load Stage 1 initially
+            animate();
+        };
+
+    </script>
+</body>
+</html>
